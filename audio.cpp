@@ -4,377 +4,177 @@
 #include <iostream>
 #include <string>
 
-
-void Audio::set_audio_level(const char* fileName )
+void Audio::set_audio_level(QString fileNameIn, QString fileNameOut, QString setDB )
 {
-    int ret;
-    audio_stream_index = -1;
-}
 
-void Audio::audio_level(const char* fileName )
-{
-    int ret;
-    audio_stream_index = -1;
+    qDebug() <<"********************! Start SET_AUDIO_LEVEL !*******************";
 
-    logging("Open input file: %s",fileName );
+    int msecDurTime=1, msecFrameTime=0;
+    stop = false;
 
-    if ( (ret = open_input_file( fileName )) < 0){
-        logging("Could not open input file: %s",fileName );
-        exit_prog(ret);
+    bool ok;
+    double dDb=setDB.trimmed().toDouble(&ok);
+
+//    if (!ok) logging("SET_AUDIO_LEVEL Conversion double ERROR! Value:%s", (file_max_vol.toStdString()).c_str() );
+
+
+    dDb = -1 * dDb;
+    QString strDb=QString::number(dDb)+"dB";
+
+    strDb = filter_volume+strDb;
+
+    qDebug() <<"SET_AUDIO_LEVEL conversion double Value setDB:"<<setDB<< " strDb"<<strDb ;
+    qDebug() <<"SET_AUDIO_LEVEL args:"<<setDB
+                        << "-hide_banner"
+                        << "-i" << fileNameIn
+                        <<"-af" << strDb
+                        <<"-c:v"<< "copy"<< "-c:a"<< "aac"
+                        <<"-strict"<< "experimental"
+                        <<fileNameOut;
+
+
+    QProcess *process = new QProcess(parent());
+    process->setProcessChannelMode(QProcess::MergedChannels);
+
+    QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
+    env.insert("LD_LIBRARY_PATH", "/media/sdb2/ffmpeg_new/lib:/media/sdb2/Qt/QtNew/lib"); // Add an environment variable
+    process->setProcessEnvironment(env);
+
+    qDebug() <<"START SET_AUDIO_LEVEL ffmpeg args:"<< "-y"<< "-hide_banner"<< "-i" << fileNameIn<<"-af" << strDb
+                        <<"-c:v"<< "copy"<< "-c:a"<< "aac"<<"-strict"<< "experimental"<<fileNameOut;
+
+
+    process->start( "/home/monsys/build-avn-Desktop_ASUS-Debug/ffmpeg", QStringList()
+                    << "-y"
+                    << "-hide_banner"
+                    << "-i" << fileNameIn
+                    <<"-af" << strDb
+                    <<"-c:v"<< "copy"<< "-c:a"<< "aac"
+                    <<"-strict"<< "experimental"
+                    <<fileNameOut
+                    );
+
+    if( !process->waitForStarted(1000) ) {
+        qDebug() <<"ERROR START SET_AUDIO_LEVEL args:"<< "-hide_banner"<< "-i" << fileNameIn<<"-af" << strDb
+                            <<"-c:v"<< "copy"<< "-c:a"<< "aac"<<"-strict"<< "experimental"<<fileNameOut;
+        return;
     }
 
-    current_frame = 1;
-    perFrame = current_frame*100/all_frame;
-    emit set_pD(perFrame);
 
-    logging("Init filter");
+    //    perFrame = msecFrameTime*100/msecDurTime;
+    emit set_pD(msecFrameTime*100/msecDurTime);
 
-    if ((ret = init_filters(filter_descr)) < 0){
-        logging("Could not init filter");
-        exit_prog(ret);
-    }
+    while (process->waitForReadyRead(-1)) {
+        if (stop) break;
+        while(process->canReadLine()){
 
-    logging("Read packets");
+            QString line = QString(process->readLine() );
 
-    if ((ret = read_all_packets()) != AVERROR_EOF){
-        logging("Error read packets");
-        exit_prog(ret);
-    } else {
-        /* signal EOF to the filtergraph */
-        if (av_buffersrc_add_frame_flags(buffersrc_ctx, NULL, 0) < 0) {
-            logging("Error while closing the filtergraph");
-            exit_prog(-1);
-        }
+//            qDebug()<< "Line from ffmpeg:" << line;
 
-        /* pull remaining frames from the filtergraph */
-        while (1) {
-            ret = av_buffersink_get_frame(buffersink_ctx, filt_frame);
-            if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF)
-                break;
-            if (ret < 0)
-                exit_prog(ret);
-            av_frame_unref(filt_frame);
-        }
-    }
+            if ( line.contains("time=") ){
+                int tt=line.indexOf("bit",0)-(line.indexOf("time",0)+5) ;
+                QString tim = line.mid(line.indexOf("time",0)+5,tt);
+                QTime frameTime = QTime::fromString(tim);
 
-    logging("End read packets");
+                msecFrameTime = QTime(0, 0, 0).msecsTo(frameTime);
 
-    av_log_set_callback(get_max_vol);
+            } else if ( line.contains("Duration:") ){
+                int nn=line.indexOf(",",0)-(line.indexOf("Dur",0)+10) ;
+                QString dur = line.mid(12,nn);
+                QTime durTime = QTime::fromString(dur);
+                msecDurTime = QTime(0, 0, 0).msecsTo(durTime);
 
-    avfilter_graph_free(&filter_graph);
-    avcodec_free_context(&dec_ctx);
-    avformat_close_input(&fmt_ctx);
-    av_packet_free(&packet);
-    av_frame_free(&frame);
-    av_frame_free(&filt_frame);
-    av_log_set_callback(av_log_default_callback);
+            } else if (line.contains("max_volume:")) {
+//                int mm=line.indexOf("dB",0)-(line.indexOf("max_vol",0)+11) ;
+//                QString max = line.mid(52,mm).trimmed();
+//                qDebug() << "***********************************AUDIO_LEVEL Max Volume:"<< max<<"<dB>";
+//                emit send_max_vol(fileName, max);
+            }
+            emit set_pD(msecFrameTime*100/msecDurTime);
+        }           //process->canReadLine
+    }               // rocess->waitForReadyRead
 
     emit set_pD(100);
-    emit send_max_vol(audio_max_vol);
+
+    process->close();
+    delete process;
+        qDebug() << "!!!!!!!!!!!!!!!!!!!! SET_AUDIO_LEVEL END process!";
 }
 
 
-
-/* read all packets */
-int Audio::read_all_packets()
+void Audio::audio_level(QString fileName )
 {
 
-    int ret=0;
-    current_frame=1;
-    packet = av_packet_alloc();
-    filt_frame = av_frame_alloc();
-    frame = av_frame_alloc();
+    qDebug() <<"********************! Start AUDIO_LEVEL !*******************";
+    int msecDurTime=1, msecFrameTime=0;
+    stop = false;
 
-        if (!packet || !filt_frame || !frame) {
-            logging("Could not allocate frame or packet or filt_frame");
-            exit_prog(1);
-        }
+    QProcess *process = new QProcess(parent());
+    process->setProcessChannelMode(QProcess::MergedChannels);
 
+    QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
+    env.insert("LD_LIBRARY_PATH", "/media/sdb2/ffmpeg_new/lib:/media/sdb2/Qt/QtNew/lib"); // Add an environment variable
+    process->setProcessEnvironment(env);
 
-    while (1) {
+    process->start( "/home/monsys/build-avn-Desktop_ASUS-Debug/ffmpeg", QStringList()
+                    << "-hide_banner" << "-i" << fileName <<"-af" << filter_vol_detect
+                    <<"-vn"<< "-sn"<< "-dn"<<"-f" << "null" << "/dev/null");
 
-//        fprintf(stderr, "Current frame: %d\r", current_frame);
+    if( !process->waitForStarted(1000) ) {
+        qDebug() << "!!!!!!!!!!!!!!!!!!!! ERROR start process!";
+        return;
+    }
 
-        fprintf(stderr, "Current frame: %d, %% - %d\r", current_frame, perFrame);
-        emit set_pD(perFrame);
+    //    perFrame = msecFrameTime*100/msecDurTime;
+    emit set_pD(msecFrameTime*100/msecDurTime);
 
-        if ((ret = av_read_frame(fmt_ctx, packet)) < 0)
-            break;
+    while (process->waitForReadyRead(-1)) {
+        if (stop) break;
+        while(process->canReadLine()){
 
-        if (packet->stream_index == audio_stream_index) {
-            ret = avcodec_send_packet(dec_ctx, packet);
-            if (ret < 0) {
-                logging("Error while sending a packet to the decoder");
-                break;
+            QString line = QString(process->readLine() );
+
+//            qDebug()<< "Line from ffmpeg:" << line;
+
+            if ( line.contains("time=") ){
+                int tt=line.indexOf("bit",0)-(line.indexOf("time",0)+5) ;
+                QString tim = line.mid(line.indexOf("time",0)+5,tt);
+                QTime frameTime = QTime::fromString(tim);
+
+                msecFrameTime = QTime(0, 0, 0).msecsTo(frameTime);
+
+            } else if ( line.contains("Duration:") ){
+                int nn=line.indexOf(",",0)-(line.indexOf("Dur",0)+10) ;
+                QString dur = line.mid(12,nn);
+                QTime durTime = QTime::fromString(dur);
+                msecDurTime = QTime(0, 0, 0).msecsTo(durTime);
+
+            } else if (line.contains("max_volume:")) {
+                int mm=line.indexOf("dB",0)-(line.indexOf("max_vol",0)+11) ;
+                QString max = line.mid(52,mm).trimmed();
+                qDebug() << "***********************************AUDIO_LEVEL Max Volume:"<< max<<"<dB>";
+                emit send_max_vol(fileName, max);
             }
+            emit set_pD(msecFrameTime*100/msecDurTime);
+        }           //process->canReadLine
+    }               // rocess->waitForReadyRead
 
-            while (ret >= 0) {
-                ret = avcodec_receive_frame(dec_ctx, frame);
-                if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF) {
-                    //                    av_strerror(ret, errstr, sizeof(errstr));
-                    //                    fprintf(stderr, "BREAK2: %d, %s\n", ret, errstr);
-                    break;
-                } else if (ret < 0) {
-                    logging("Error while receiving a frame from the decoder");
-                    exit_prog(ret);
-                }
-
-                if (ret >= 0) {
-                    /* push the audio data from decoded frame into the filtergraph */
-                    if (av_buffersrc_add_frame_flags(buffersrc_ctx, frame, AV_BUFFERSRC_FLAG_KEEP_REF) < 0) {
-                        logging("Error while feeding the audio filtergraph");
-                        exit_prog(-1);
-                    }
-
-                    /* pull filtered audio from the filtergraph */
-                    while (1) {
-                        ret = av_buffersink_get_frame(buffersink_ctx, filt_frame);
-                        if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF)
-                            break;
-                        if (ret < 0)
-                            exit_prog(ret);
-                        // AVN                  print_frame(filt_frame);
-                        av_frame_unref(filt_frame);
-                        current_frame++;
-                        perFrame = current_frame*100/all_frame;
-                        //                        progress.setValue(perFrame);
-                    }
-                    av_frame_unref(frame);
-                }
-            }
-        }
-        av_packet_unref(packet);
-    }
-    return ret;
+    qDebug() << "!!!!! AUDIO_LEVEL End read from process ";
+    emit set_pD(100);
+    process->close();
+    delete process;
 }
-
-
-int Audio::open_input_file(const char *filename)
-{
-    const AVCodec *dec;
-    AVPacket *pk = av_packet_alloc();
-
-        if (!pk) {
-            logging("Could not allocate  packet pk");
-            exit_prog(1);
-        }
-
-        fmt_ctx = avformat_alloc_context();
-        if (!fmt_ctx)
-        {
-            logging("Could not allocate fmt_ctx");
-            exit_prog(1);
-        }
-
-    int ret;
-
-// открываем файл для подсчета аудио фреймов.
-    if ((ret = avformat_open_input(&fmt_ctx, filename, NULL, NULL)) < 0) {
-        logging("Cannot open input file: %s", filename);
-        exit_prog(ret);
-    }
-
-    if ((ret = avformat_find_stream_info(fmt_ctx, NULL)) < 0) {
-        logging("Cannot find stream information");
-        exit_prog(ret);
-    }
-
-    /* select the audio stream */
-    ret = av_find_best_stream(fmt_ctx, AVMEDIA_TYPE_AUDIO, -1, -1, &dec, 0);
-    if (ret < 0) {
-        logging("Cannot find an audio stream in the input file");
-        exit_prog(ret);
-    }
-
-    audio_stream_index = ret;
-
-    // подсчет аудио фреймов всего
-
-    while (1) {
-
-        if ((ret = av_read_frame(fmt_ctx, pk)) < 0)
-            break;
-        if (pk->stream_index == audio_stream_index)  current_frame++;
-    }
-
-    fprintf(stderr, "All Audio Frame %d in file %s\n", current_frame, filename);
-    all_frame = current_frame;
-
-    avformat_close_input(&fmt_ctx);
-
-// параноя, ещё раз открываем файл.
-    if ((ret = avformat_open_input(&fmt_ctx, filename, NULL, NULL)) < 0) {
-        logging("Cannot open input file: %s", filename);
-        exit_prog(ret);
-    }
-
-    if ((ret = avformat_find_stream_info(fmt_ctx, NULL)) < 0) {
-        logging("Cannot find stream information");
-        exit_prog(ret);
-    }
-
-    /* select the audio stream */
-    ret = av_find_best_stream(fmt_ctx, AVMEDIA_TYPE_AUDIO, -1, -1, &dec, 0);
-    if (ret < 0) {
-        logging("Cannot find an audio stream in the input file");
-        exit_prog(ret);
-    }
-    audio_stream_index = ret;
-
-    /* create decoding context */
-    dec_ctx = avcodec_alloc_context3(dec);
-    if (!dec_ctx)
-        return AVERROR(ENOMEM);
-    avcodec_parameters_to_context(dec_ctx, fmt_ctx->streams[audio_stream_index]->codecpar);
-
-    /* init the audio decoder */
-    if ((ret = avcodec_open2(dec_ctx, dec, NULL)) < 0) {
-        logging("Cannot open audio decoder");
-        exit_prog(ret);
-    }
-
-    return 0;
-}
-
-
-int Audio::init_filters(const char *filters_descr)
-{
-    char args[512];
-    int ret = 0;
-
-    const AVFilter *abuffersrc  = avfilter_get_by_name("abuffer");
-    const AVFilter *abuffersink = avfilter_get_by_name("abuffersink");
-
-    AVFilterInOut *outputs = avfilter_inout_alloc();
-    AVFilterInOut *inputs  = avfilter_inout_alloc();
-
-    AVRational time_base = fmt_ctx->streams[audio_stream_index]->time_base;
-
-    filter_graph = avfilter_graph_alloc();
-    if (!outputs || !inputs || !filter_graph) {
-        ret = AVERROR(ENOMEM);
-        goto end;
-    }
-
-    /* buffer audio source: the decoded frames from the decoder will be inserted here. */
-    if (dec_ctx->ch_layout.order == AV_CHANNEL_ORDER_UNSPEC)
-        av_channel_layout_default(&dec_ctx->ch_layout, dec_ctx->ch_layout.nb_channels);
-    ret = snprintf(args, sizeof(args),
-                   "time_base=%d/%d:sample_rate=%d:sample_fmt=%s:channel_layout=",
-                   time_base.num, time_base.den, dec_ctx->sample_rate,
-                   av_get_sample_fmt_name(dec_ctx->sample_fmt));
-    av_channel_layout_describe(&dec_ctx->ch_layout, args + ret, sizeof(args) - ret);
-    ret = avfilter_graph_create_filter(&buffersrc_ctx, abuffersrc, "in",
-                                       args, NULL, filter_graph);
-    if (ret < 0) {
-        logging("Cannot create audio buffer source");
-        goto end;
-    }
-
-    /* buffer audio sink: to terminate the filter chain. */
-    buffersink_ctx = avfilter_graph_alloc_filter(filter_graph, abuffersink, "out");
-    if (!buffersink_ctx) {
-        logging("Cannot create audio buffer sink");
-        ret = AVERROR(ENOMEM);
-        goto end;
-    }
-
-    ret = av_opt_set(buffersink_ctx, "sample_formats", "s16",
-                     AV_OPT_SEARCH_CHILDREN);
-    if (ret < 0) {
-        logging("Cannot set output sample format");
-        goto end;
-    }
-
-    ret = av_opt_set(buffersink_ctx, "channel_layouts", "mono",
-                     AV_OPT_SEARCH_CHILDREN);
-    if (ret < 0) {
-        logging("Cannot set output channel layout");
-        goto end;
-    }
-
-    ret = av_opt_set_array(buffersink_ctx, "samplerates", AV_OPT_SEARCH_CHILDREN,
-                           0, 1, AV_OPT_TYPE_INT, &out_sample_rate);
-    if (ret < 0) {
-        logging("Cannot set output sample rate");
-        goto end;
-    }
-
-    ret = avfilter_init_dict(buffersink_ctx, NULL);
-    if (ret < 0) {
-        logging("Cannot initialize audio buffer sink");
-        goto end;
-    }
-
-    /*
-     * Set the endpoints for the filter graph. The filter_graph will
-     * be linked to the graph described by filters_descr.
-     */
-
-    /*
-     * The buffer source output must be connected to the input pad of
-     * the first filter described by filters_descr; since the first
-     * filter input label is not specified, it is set to "in" by
-     * default.
-     */
-    outputs->name       = av_strdup("in");
-    outputs->filter_ctx = buffersrc_ctx;
-    outputs->pad_idx    = 0;
-    outputs->next       = NULL;
-
-    /*
-     * The buffer sink input must be connected to the output pad of
-     * the last filter described by filters_descr; since the last
-     * filter output label is not specified, it is set to "out" by
-     * default.
-     */
-    inputs->name       = av_strdup("out");
-    inputs->filter_ctx = buffersink_ctx;
-    inputs->pad_idx    = 0;
-    inputs->next       = NULL;
-
-    if ((ret = avfilter_graph_parse_ptr(filter_graph, filters_descr,
-                                        &inputs, &outputs, NULL)) < 0)
-        goto end;
-
-    if ((ret = avfilter_graph_config(filter_graph, NULL)) < 0)
-        goto end;
-
-    /* Print summary of the sink buffer
-     * Note: args buffer is reused to store channel layout string */
-    outlink = buffersink_ctx->inputs[0];
-    av_channel_layout_describe(&outlink->ch_layout, args, sizeof(args));
-
-end:
-    avfilter_inout_free(&inputs);
-    avfilter_inout_free(&outputs);
-
-    return ret;
-}
-
 
 int Audio::exit_prog(int err)
 {
 
-    char errstr[1024];
-    avfilter_graph_free(&filter_graph);
-    avcodec_free_context(&dec_ctx);
-    avformat_close_input(&fmt_ctx);
-    av_packet_free(&packet);
-    av_frame_free(&frame);
-    av_frame_free(&filt_frame);
+//    char errstr[1024];
 
-    if (err != 0 && err != AVERROR_EOF) {
-        if ( err<0 ) {
-            av_strerror(err, errstr, sizeof(errstr));
-            fprintf(stderr, "Error occurred: %s\n", errstr);
-        }
-        fprintf(stderr, "Exit Error:%d\n", err);
-        exit(1);
-    }
     fprintf(stderr, "Exit:%d\n", err);
     exit(0);
 }
+
 
 void Audio::logging(const char *fmt, ...)
 {
@@ -386,11 +186,11 @@ void Audio::logging(const char *fmt, ...)
     fprintf( stderr, "\n" );
 }
 
-//---------------------------------------------------------------------------------------
 Audio::Audio(QObject *parent)
     : QObject{parent}
 {
         setObjectName("Audio");
+        stop=false;
 }
 
 //---------------------------------------------------------------------------------------
@@ -413,7 +213,39 @@ void get_max_vol(void *ptr, int, const char *fmt, va_list vl)
     if ( s2 == "max_volume" )
     {
         s2=s1.substr(s1.find(":")+1, s1.find("dB")-(s1.find(":")+1) );
-        std::cout << "MAX VALUE max_volume#"<< s2 << std::endl;
+        s2 = trim(s2);
         audio_max_vol = s2;
+        std::cout << "GET_MAX_VOLUME max_volume:"<< audio_max_vol << std::endl;
     }
 }
+
+std::string trim( const std::string& s)
+{
+    const std::string blank = " \t\r\n";
+    size_t p1, p2, start;
+
+    if ( std::string::npos == (p1 = s.find_first_not_of( blank)))
+        return "";
+    start = p1;
+    do {
+        if ( std::string::npos == (p2 = s.find_first_of( blank, p1))) {
+            return s.substr( start);
+        }
+    } while ( std::string::npos != ( p1 = s.find_first_not_of( blank, p2)));
+    return s.substr( start, p2-start);
+}
+
+
+void Audio::recv_cancel_pD(){
+    stop = true;
+}
+
+//void Audio::recv_max_vol(std::string str){
+////    a_m_v = str;
+//    file_max_vol = QString::fromStdString(str).replace(',','.');
+
+//    QTextStream output(stdout);
+//    output <<"RECV_MAX_VOL file_max_vol:" <<file_max_vol<< "\n";
+
+//}
+

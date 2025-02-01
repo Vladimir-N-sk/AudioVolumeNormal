@@ -56,12 +56,16 @@
 int main(int argc, char *argv[])
 {
     QApplication app(argc, argv);
+    QCoreApplication::setOrganizationName("Vladimir-N-sk");
+    QCoreApplication::setApplicationName("Audio Volume Normal");
+    QCoreApplication::setApplicationVersion("1.0");
+    QCoreApplication::setOrganizationDomain("alvladnik@gmail.com");
+
     Window AudioWin;
 
-
 //     AudioWin.setFixedSize(640,480);
-     AudioWin.setMinimumSize(1280, 720);
-//     AudioWin.setMinimumSize(640,480);
+//     AudioWin.setMinimumSize(1280, 720);
+     AudioWin.setMinimumSize(640,480);
 
     AudioWin.show();
     return app.exec();
