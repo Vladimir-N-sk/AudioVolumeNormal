@@ -11,7 +11,6 @@ static inline QString fileNameOfItem(const QTableWidgetItem *item)
     return item->data(absoluteFileNameRole).toString();
 }
 
-
 static inline void openFile(const QString &fileName)
 {
   QDesktopServices::openUrl(QUrl::fromLocalFile(fileName));
@@ -21,6 +20,8 @@ Window::Window(QWidget *parent)
     : QWidget(parent)
 {
     setWindowTitle(tr("Audio Volume Normal"));
+
+//    QLocale::setDefault(QLocale::Russian);
 
     const QIcon folderIcon = QIcon::fromTheme("folder-cyan");
 
@@ -313,8 +314,6 @@ void Window::showMapFiles()
     filesFoundLabel->setText(tr("Найдено %n медиа файлов", nullptr, FileSize.size() ));
     filesFoundLabel->setWordWrap(true);
 }
-
-
 
 QComboBox *Window::createComboBox(const QString &text)
 {

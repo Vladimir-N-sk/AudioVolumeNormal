@@ -15,7 +15,7 @@ void Audio::set_audio_level(QString fileNameIn, QString fileNameOut, QString set
     bool ok;
     double dDb=setDB.trimmed().toDouble(&ok);
 
-//    if (!ok) logging("SET_AUDIO_LEVEL Conversion double ERROR! Value:%s", (file_max_vol.toStdString()).c_str() );
+    if (!ok) qDebug()<< "SET_AUDIO_LEVEL Conversion double ERROR! Value:" << setDB;
 
 
     dDb = -1 * dDb;
@@ -23,7 +23,6 @@ void Audio::set_audio_level(QString fileNameIn, QString fileNameOut, QString set
 
     strDb = filter_volume+strDb;
 
-    qDebug() <<"SET_AUDIO_LEVEL conversion double Value setDB:"<<setDB<< " strDb"<<strDb ;
     qDebug() <<"SET_AUDIO_LEVEL args:"<<setDB
                         << "-hide_banner"
                         << "-i" << fileNameIn
@@ -32,19 +31,18 @@ void Audio::set_audio_level(QString fileNameIn, QString fileNameOut, QString set
                         <<"-strict"<< "experimental"
                         <<fileNameOut;
 
-
+    QString dirFFmpeg = QCoreApplication::applicationDirPath()+"/lib";
     QProcess *process = new QProcess(parent());
     process->setProcessChannelMode(QProcess::MergedChannels);
 
     QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
-    env.insert("LD_LIBRARY_PATH", "/media/sdb2/ffmpeg_new/lib:/media/sdb2/Qt/QtNew/lib"); // Add an environment variable
+    env.insert("LD_LIBRARY_PATH", dirFFmpeg); // Add an environment variable
     process->setProcessEnvironment(env);
 
     qDebug() <<"START SET_AUDIO_LEVEL ffmpeg args:"<< "-y"<< "-hide_banner"<< "-i" << fileNameIn<<"-af" << strDb
                         <<"-c:v"<< "copy"<< "-c:a"<< "aac"<<"-strict"<< "experimental"<<fileNameOut;
 
-
-    process->start( "/home/monsys/build-avn-Desktop_ASUS-Debug/ffmpeg", QStringList()
+    process->start( (dirFFmpeg+"/ffmpeg"), QStringList()
                     << "-y"
                     << "-hide_banner"
                     << "-i" << fileNameIn
@@ -86,10 +84,6 @@ void Audio::set_audio_level(QString fileNameIn, QString fileNameOut, QString set
                 msecDurTime = QTime(0, 0, 0).msecsTo(durTime);
 
             } else if (line.contains("max_volume:")) {
-//                int mm=line.indexOf("dB",0)-(line.indexOf("max_vol",0)+11) ;
-//                QString max = line.mid(52,mm).trimmed();
-//                qDebug() << "***********************************AUDIO_LEVEL Max Volume:"<< max<<"<dB>";
-//                emit send_max_vol(fileName, max);
             }
             emit set_pD(msecFrameTime*100/msecDurTime);
         }           //process->canReadLine
@@ -110,14 +104,19 @@ void Audio::audio_level(QString fileName )
     int msecDurTime=1, msecFrameTime=0;
     stop = false;
 
+    QString dirFFmpeg = QCoreApplication::applicationDirPath()+"/lib";
+    qDebug() <<"********************! applicationDirPath:"<< dirFFmpeg;
+
     QProcess *process = new QProcess(parent());
     process->setProcessChannelMode(QProcess::MergedChannels);
 
     QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
-    env.insert("LD_LIBRARY_PATH", "/media/sdb2/ffmpeg_new/lib:/media/sdb2/Qt/QtNew/lib"); // Add an environment variable
+//    env.insert("LD_LIBRARY_PATH", "/media/sdb2/ffmpeg_new/lib:/media/sdb2/Qt/QtNew/lib"); // Add an environment variable
+    env.insert("LD_LIBRARY_PATH", dirFFmpeg); // Add an environment variable
     process->setProcessEnvironment(env);
 
-    process->start( "/home/monsys/build-avn-Desktop_ASUS-Debug/ffmpeg", QStringList()
+//    process->start( "/home/monsys/build-avn-Desktop_ASUS-Debug/ffmpeg", QStringList()
+    process->start( (dirFFmpeg+"/ffmpeg"), QStringList()
                     << "-hide_banner" << "-i" << fileName <<"-af" << filter_vol_detect
                     <<"-vn"<< "-sn"<< "-dn"<<"-f" << "null" << "/dev/null");
 
@@ -126,7 +125,6 @@ void Audio::audio_level(QString fileName )
         return;
     }
 
-    //    perFrame = msecFrameTime*100/msecDurTime;
     emit set_pD(msecFrameTime*100/msecDurTime);
 
     while (process->waitForReadyRead(-1)) {
@@ -166,25 +164,22 @@ void Audio::audio_level(QString fileName )
     delete process;
 }
 
-int Audio::exit_prog(int err)
-{
-
-//    char errstr[1024];
-
-    fprintf(stderr, "Exit:%d\n", err);
-    exit(0);
-}
+//int Audio::exit_prog(int err)
+//{
+//    fprintf(stderr, "Exit:%d\n", err);
+//    exit(0);
+//}
 
 
-void Audio::logging(const char *fmt, ...)
-{
-    va_list args;
-    fprintf( stderr, "LOG: " );
-    va_start( args, fmt );
-    vfprintf( stderr, fmt, args );
-    va_end( args );
-    fprintf( stderr, "\n" );
-}
+//void Audio::logging(const char *fmt, ...)
+//{
+//    va_list args;
+//    fprintf( stderr, "LOG: " );
+//    va_start( args, fmt );
+//    vfprintf( stderr, fmt, args );
+//    va_end( args );
+//    fprintf( stderr, "\n" );
+//}
 
 Audio::Audio(QObject *parent)
     : QObject{parent}
@@ -199,41 +194,41 @@ Audio::~Audio()
 //    stop();
 }
 
-void get_max_vol(void *ptr, int, const char *fmt, va_list vl)
-{
-    char str[100];
-    std::string s1, s2;
+//void get_max_vol(void *ptr, int, const char *fmt, va_list vl)
+//{
+//    char str[100];
+//    std::string s1, s2;
 
-    vsprintf(str, fmt, vl);
-//    fprintf(stdout,"Строка:%s",str);
-    s1=str;
+//    vsprintf(str, fmt, vl);
+////    fprintf(stdout,"Строка:%s",str);
+//    s1=str;
 
-    s2=s1.substr(0, s1.find(":") );
+//    s2=s1.substr(0, s1.find(":") );
 
-    if ( s2 == "max_volume" )
-    {
-        s2=s1.substr(s1.find(":")+1, s1.find("dB")-(s1.find(":")+1) );
-        s2 = trim(s2);
-        audio_max_vol = s2;
-        std::cout << "GET_MAX_VOLUME max_volume:"<< audio_max_vol << std::endl;
-    }
-}
+//    if ( s2 == "max_volume" )
+//    {
+//        s2=s1.substr(s1.find(":")+1, s1.find("dB")-(s1.find(":")+1) );
+//        s2 = trim(s2);
+//        audio_max_vol = s2;
+//        std::cout << "GET_MAX_VOLUME max_volume:"<< audio_max_vol << std::endl;
+//    }
+//}
 
-std::string trim( const std::string& s)
-{
-    const std::string blank = " \t\r\n";
-    size_t p1, p2, start;
+//std::string trim( const std::string& s)
+//{
+//    const std::string blank = " \t\r\n";
+//    size_t p1, p2, start;
 
-    if ( std::string::npos == (p1 = s.find_first_not_of( blank)))
-        return "";
-    start = p1;
-    do {
-        if ( std::string::npos == (p2 = s.find_first_of( blank, p1))) {
-            return s.substr( start);
-        }
-    } while ( std::string::npos != ( p1 = s.find_first_not_of( blank, p2)));
-    return s.substr( start, p2-start);
-}
+//    if ( std::string::npos == (p1 = s.find_first_not_of( blank)))
+//        return "";
+//    start = p1;
+//    do {
+//        if ( std::string::npos == (p2 = s.find_first_of( blank, p1))) {
+//            return s.substr( start);
+//        }
+//    } while ( std::string::npos != ( p1 = s.find_first_not_of( blank, p2)));
+//    return s.substr( start, p2-start);
+//}
 
 
 void Audio::recv_cancel_pD(){

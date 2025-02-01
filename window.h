@@ -12,6 +12,7 @@
 #include <QStatusBar>
 #include <QMap>
 #include <QList>
+#include <QLocale>
 
 //?? AVN
 //#include <QProgressBar>
@@ -26,7 +27,7 @@ class QPushButton;
 class QTableWidget;
 class QTableWidgetItem;
 class QProgressDialog;
-//class QList;
+class QLocale;
 QT_END_NAMESPACE
 
 
@@ -94,7 +95,7 @@ private:
     QRadioButton *rb3;   // переключателя.
     QDir currentDir;
 
-    void audio_level(const char* fileName);    
+    void audio_level(const char* fileName);
     void logging(const char *fmt, ...);
 
 

@@ -12,7 +12,6 @@ SOURCES = window.cpp \
 main.cpp \
 audio.cpp
 
-
 INCLUDEPATH += /media/sdb2/ffmpeg_new/include
 
 LIBS += -L/media/sdb2/Qt/QtNew/lib

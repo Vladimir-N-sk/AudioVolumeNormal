@@ -10,14 +10,14 @@
 #include <QByteArray>
 #include <QTime>
 #include <QProcessEnvironment>
+#include <QCoreApplication>
 
-std::string trim( const std::string&);
-
-static std::string audio_max_vol;
+//std::string trim( const std::string&);
+//static std::string audio_max_vol;
 
 class Audio : public QObject
 {
-    Q_OBJECT    
+    Q_OBJECT
 public:
     explicit Audio(QObject *parent = nullptr);
     virtual ~Audio();
@@ -26,8 +26,8 @@ public:
     void audio_level(QString fileName );
     void set_audio_level(QString fileNameIn, QString fileNameOut, QString setDB);
 
-    int exit_prog(int);
-    void logging(const char *fmt, ...);
+//    int exit_prog(int);
+//    void logging(const char *fmt, ...);
 
     int current_frame;
     int all_frame;
@@ -51,7 +51,7 @@ protected:
     QString filter_volume = "volume=";
 
 
-private:     
+private:
     bool stop;
 
 };
