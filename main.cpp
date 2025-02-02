@@ -51,10 +51,15 @@
 #include <QApplication>
 #include <QtPlugin>
 
+#include <qapplication.h>
+#include <stdio.h>
+#include <stdlib.h>
+
 #include "window.h"
 
 int main(int argc, char *argv[])
 {
+//    qInstallMessageHandler(myMessageOutput);
     QApplication app(argc, argv);
     QCoreApplication::setOrganizationName("Vladimir-N-sk");
     QCoreApplication::setApplicationName("Audio Volume Normal");
@@ -64,8 +69,8 @@ int main(int argc, char *argv[])
     Window AudioWin;
 
 //     AudioWin.setFixedSize(640,480);
-//     AudioWin.setMinimumSize(1280, 720);
-     AudioWin.setMinimumSize(640,480);
+     AudioWin.setMinimumSize(1280, 720);
+//     AudioWin.setMinimumSize(640,480);
 
     AudioWin.show();
     return app.exec();

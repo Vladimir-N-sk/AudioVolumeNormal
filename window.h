@@ -49,6 +49,8 @@ protected:
     QMap<QString, qint64> FileSize;
     QMap<QString, QString> FileVolume;
     QString strMaxVolume;
+    QList<QTableWidgetItem *> listItem;
+
 
 signals:
 void send_stop_pD();

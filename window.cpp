@@ -21,8 +21,6 @@ Window::Window(QWidget *parent)
 {
     setWindowTitle(tr("Audio Volume Normal"));
 
-//    QLocale::setDefault(QLocale::Russian);
-
     const QIcon folderIcon = QIcon::fromTheme("folder-cyan");
 
     QPushButton *browseButton = new QPushButton(folderIcon, tr("Папки..."), this);
@@ -121,7 +119,7 @@ void Window::step_pD(int step)
 void Window::recv_max_vol(QString fName, QString strMVol){
 
     FileVolume.insert(fName, strMVol);
-    showMapFiles();
+//    showMapFiles();
 }
 
 void Window::work()
@@ -133,17 +131,18 @@ void Window::work()
                                     "Ни один файл не выбран."),
                                  QMessageBox::Ok, QMessageBox::NoButton);
     } else {
-
         if ( rb1->isChecked()) {
 
             pD = new QProgressDialog(this);
             pD->setRange(0, 100);
             pD->setCancelButtonText(tr("Стоп"));
             pD->setMinimumWidth(400);
-            pD->setMinimumDuration(2000);
+            pD->setMinimumDuration(1000);
             pD->setValue(0);
             pD->setModal(true);
             pD->setWindowTitle(tr("Вычисление уровня аудио") );
+            pD->setLabelText(tr("в файле: ")+vyborFile);
+
             connect(pD, &QProgressDialog::canceled, audio, &Audio::recv_cancel_pD);
 
             audio->audio_level(vyborFile.toUtf8());
@@ -173,6 +172,7 @@ void Window::work()
                 pD->setMinimumDuration(1000);
                 pD->setValue(0);
                 pD->setModal(true);
+                pD->setLabelText(tr("в файле: ")+vyborFile);
                 pD->setWindowTitle(tr("Вычисление уровня аудио") );
                 connect(pD, &QProgressDialog::canceled, audio, &Audio::recv_cancel_pD);
 
@@ -188,6 +188,7 @@ void Window::work()
                     pD->setMinimumDuration(1000);
                     pD->setValue(0);
                     pD->setModal(true);
+                    pD->setLabelText(tr("в файле: ")+vyborFile);
                     pD->setWindowTitle(tr("Изменение уровня аудио") );
                     connect(pD, &QProgressDialog::canceled, audio, &Audio::recv_cancel_pD);
 
@@ -201,6 +202,7 @@ void Window::work()
 
             } else {
                 if ( QFile::rename(vyborFile, avnFile) ){
+
                     pD = new QProgressDialog(this);
                     pD->setRange(0, 100);
                     pD->setCancelButtonText(tr("Стоп"));
@@ -208,6 +210,7 @@ void Window::work()
                     pD->setMinimumDuration(1000);
                     pD->setValue(0);
                     pD->setModal(true);
+                    pD->setLabelText(tr("в файле: ")+vyborFile);
                     pD->setWindowTitle(tr("Изменение уровня аудио") );
                     connect(pD, &QProgressDialog::canceled, audio, &Audio::recv_cancel_pD);
 
@@ -267,10 +270,12 @@ void Window::find()
 
 void Window::createMapFiles(const QStringList &findFileNames)
 {
-        for (const QString &filePathName : findFileNames) {
-            FileSize.insert(filePathName, QFileInfo(filePathName).size());
-            FileVolume.insert(filePathName, "-.-");
-        }
+    FileSize.clear();
+    FileVolume.clear();
+    for (const QString &filePathName : findFileNames) {
+        FileSize.insert(filePathName, QFileInfo(filePathName).size());
+        FileVolume.insert(filePathName, "-.-");
+    }
 }
 
 void Window::showMapFiles()
@@ -353,21 +358,25 @@ void Window::openFileOfItem(int row, int /* column */)
     vyborFilesList.clear();
     vyborFilesList << vyborFile;
     work();
+    showMapFiles();
 }
 
 void Window::work_list()
 {
     // колличество итемов = строка * столбец
-    QList<QTableWidgetItem *> listItem = filesTable->selectedItems();
+//    QList<QTableWidgetItem *> listItem = filesTable->selectedItems();
+    listItem.clear();
+    listItem = filesTable->selectedItems();
 
     if (!listItem.isEmpty()) {
 
         // прыгаем через 3 элемента
         for (int i=0; i<listItem.size() ;i+=3) {
             vyborFile =listItem.at(i)->data(absoluteFileNameRole).toString();
-            qDebug()<< "**************** File:"<<vyborFile;
+            qDebug()<<"I:"<< i <<"***File from listItem:"<<vyborFile;
             work();
         }
+        showMapFiles();
     } else {
         QMessageBox::information(this, tr("Выбран файл"),
                                  tr("<h2>Внимание!</h2>\n"
@@ -402,6 +411,7 @@ void Window::contextMenu(const QPoint &pos)
         vyborFilesList.clear();
         vyborFilesList << fileName;
         work();
+        showMapFiles();
     }
 #ifndef QT_NO_CLIPBOARD
     else if (action == copyAction)

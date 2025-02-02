@@ -26,6 +26,8 @@ public:
     void audio_level(QString fileName );
     void set_audio_level(QString fileNameIn, QString fileNameOut, QString setDB);
 
+    void log_prog(QProcess::ProcessError process_error);
+//    void Client::displayError(QLocalSocket::LocalSocketError socketError)
 //    int exit_prog(int);
 //    void logging(const char *fmt, ...);
 
