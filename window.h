@@ -13,10 +13,12 @@
 #include <QMap>
 #include <QList>
 #include <QLocale>
-
-//?? AVN
-//#include <QProgressBar>
-//#include <QMainWindow>
+#include <QtGlobal>
+#include <QtDebug>
+#include <QTextStream>
+#include <QTextCodec>
+#include <QTime>
+#include <QFile>
 
 #include "audio.h"
 

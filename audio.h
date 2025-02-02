@@ -12,9 +12,6 @@
 #include <QProcessEnvironment>
 #include <QCoreApplication>
 
-//std::string trim( const std::string&);
-//static std::string audio_max_vol;
-
 class Audio : public QObject
 {
     Q_OBJECT
