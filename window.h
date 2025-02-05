@@ -21,6 +21,7 @@
 #include <QFile>
 
 #include "audio.h"
+#include "dialog.h"
 
 QT_BEGIN_NAMESPACE
 class QComboBox;
@@ -56,6 +57,7 @@ protected:
 
 signals:
 void send_stop_pD();
+void send_file_name(QString);
 
 public slots:
     void step_pD(int step);
@@ -74,6 +76,7 @@ private slots:
 
 private:
     Audio *audio;
+    Dialog *pbDialog;
 
     QStringList findFilesList;
     QStringList vyborFilesList;

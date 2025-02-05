@@ -7,18 +7,20 @@ QT += widgets core gui
 QTPLUGIN.platforms = qminimal qxcb
 
 HEADERS = window.h \
-    audio.h
+    audio.h \
+    dialog.h
 
 SOURCES = window.cpp \
 main.cpp \
-audio.cpp
+audio.cpp \
+    dialog.cpp
 
 #INCLUDEPATH += /media/sdb2/ffmpeg_new/include
 
 #CONFIG += static
 
-#LIBS += -L/media/sdb2/Qt/QtStatic/lib
-#LIBS += -L/media/sdb2/ffmpeg_new/lib
+#LIBS += -L/media/sdb2/Qt/QtStatic/lib   // задается в настройках QtCreator
+#LIBS += -L/media/sdb2/ffmpeg_new/lib    // задается в настройках QtCreator
 #LIBS += -lpostproc -lavformat  -lavcodec -lavutil -lavfilter -lswscale -lavdevice -lswresample -lx264 -lx265
 
 QMAKE_CXXFLAGS_WARN_ON += -Wno-unused

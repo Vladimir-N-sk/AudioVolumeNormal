@@ -157,8 +157,8 @@ void Audio::audio_level(QString fileName )
         }           //process->canReadLine
     }               // rocess->waitForReadyRead
 
-    qDebug() << "AUDIO_LEVEL End read from process ";
     emit set_pD(100);
+    qDebug() << "AUDIO_LEVEL End read from process ";
     process->close();
     delete process;
 }

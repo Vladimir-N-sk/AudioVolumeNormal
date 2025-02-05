@@ -87,21 +87,25 @@ static QTextStream output_ts;
 
 void myMessageHandler(QtMsgType type, const QMessageLogContext &context, const QString& msg)
 {
+        QTime time = QTime::currentTime();
+        QString formattedTime = time.toString("hh:mm:ss.zzz");
+        QByteArray formattedTimeMsg = formattedTime.toLocal8Bit();
+
     switch (type) {
     case QtDebugMsg:
-        output_ts << QString("Debug: %1 (%2)").arg(msg, context.file) << Qt::endl;
+        output_ts << QString("Debug: %1 %2 (%3)").arg(formattedTime,msg, context.file) << Qt::endl;
         break;
     case QtInfoMsg:
-        output_ts << QString("Info: %1 (%2)").arg(msg, context.file) << Qt::endl;
+        output_ts << QString("Info: %1 %2 (%3)").arg(formattedTime,msg, context.file) << Qt::endl;
         break;
     case QtWarningMsg:
-        output_ts << QString("Warning: %1 (%2)").arg(msg, context.file) << Qt::endl;
+        output_ts << QString("Warning: %1 %2 (%3)").arg(formattedTime,msg, context.file) << Qt::endl;
         break;
     case QtCriticalMsg:
-        output_ts << QString("Critical: %1 (%2)").arg(msg, context.file) << Qt::endl;
+        output_ts << QString("Critical: %1 %2 (%3)").arg(formattedTime,msg, context.file) << Qt::endl;
         break;
     case QtFatalMsg:
-        output_ts << QString("Fatal: %1 (%2)").arg(msg, context.file) << Qt::endl;
+        output_ts << QString("Fatal: %1 %2 (%3)").arg(formattedTime,msg, context.file) << Qt::endl;
         abort();
     }
 }

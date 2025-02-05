@@ -3,6 +3,7 @@
 
 #include "window.h"
 #include "audio.h"
+#include "dialog.h"
 
 enum { absoluteFileNameRole = Qt::UserRole + 1 };
 
@@ -83,10 +84,15 @@ Window::Window(QWidget *parent)
     mainLayout->addWidget(gb, 4, 1, 1, 1);
 
     audio = new Audio();
-    sb->showMessage(tr("Для начала работы нажмите <Найти файлы>"));
-    connect(audio,&Audio::set_pD, this, &Window::step_pD );
+
+//    pbDialog = new Dialog();
+//    pbDialog->setModal(true);
+//    connect(audio,&Audio::set_pD, pbDialog, &Dialog::set_pb_audio );
+
     connect(audio,&Audio::send_max_vol, this, &Window::recv_max_vol );
-//    connect(pD, &QProgressDialog::canceled, audio, &Audio::recv_cancel_pD);
+    connect(audio,&Audio::set_pD, this, &Window::step_pD );
+
+    sb->showMessage(tr("Для начала работы нажмите <Найти файлы>"));
 
 }
 
@@ -142,12 +148,21 @@ void Window::work()
             pD->setModal(true);
             pD->setWindowTitle(tr("Вычисление уровня аудио") );
             pD->setLabelText(tr("в файле: ")+vyborFile);
+            pD->setAttribute(Qt::WA_DeleteOnClose);
+//            connect(pD, &QProgressDialog::canceled, audio, &Audio::recv_cancel_pD);
 
-            connect(pD, &QProgressDialog::canceled, audio, &Audio::recv_cancel_pD);
+                pbDialog = new Dialog(this);
+                pbDialog->setModal(true);
+                connect(audio,&Audio::set_pD, pbDialog, &Dialog::set_pb_audio );
+
+            emit send_file_name(vyborFile);
+            pbDialog->show();
 
             audio->audio_level(vyborFile.toUtf8());
 
-            delete pD;
+//            pbDialog->hide();
+            delete pbDialog;
+
         }
         if ( rb2->isChecked()){
 
@@ -174,10 +189,11 @@ void Window::work()
                 pD->setModal(true);
                 pD->setLabelText(tr("в файле: ")+vyborFile);
                 pD->setWindowTitle(tr("Вычисление уровня аудио") );
+                pD->setAttribute(Qt::WA_DeleteOnClose);
                 connect(pD, &QProgressDialog::canceled, audio, &Audio::recv_cancel_pD);
 
                 audio->audio_level(vyborFile.toUtf8());
-                delete pD;
+//                delete pD;
 
                 if ( QFile::rename(vyborFile, avnFile) ){
 
@@ -190,10 +206,12 @@ void Window::work()
                     pD->setModal(true);
                     pD->setLabelText(tr("в файле: ")+vyborFile);
                     pD->setWindowTitle(tr("Изменение уровня аудио") );
+                    pD->setAttribute(Qt::WA_DeleteOnClose);
+
                     connect(pD, &QProgressDialog::canceled, audio, &Audio::recv_cancel_pD);
 
                     audio->set_audio_level(avnFile.toUtf8(), outFile.toUtf8() ,FileVolume.value(outFile));
-                    delete pD;
+//                    delete pD;
                 }else {
                     QMessageBox::warning(this, tr("Выбран файл"), tr("<h2>Внимание!</h2>\n"
                                                                      "Не удалось создать копию файла"),
@@ -212,10 +230,11 @@ void Window::work()
                     pD->setModal(true);
                     pD->setLabelText(tr("в файле: ")+vyborFile);
                     pD->setWindowTitle(tr("Изменение уровня аудио") );
+                    pD->setAttribute(Qt::WA_DeleteOnClose);
                     connect(pD, &QProgressDialog::canceled, audio, &Audio::recv_cancel_pD);
 
                     audio->set_audio_level(avnFile.toUtf8(), outFile.toUtf8() ,FileVolume.value(outFile));
-                    delete pD;
+//                    delete pD;
                 }else {
                     QMessageBox::warning(this, tr("Выбран файл"), tr("<h2>Внимание!</h2>\n"
                                                                      "Не удалось создать копию файла"),
@@ -369,7 +388,7 @@ void Window::work_list()
     listItem = filesTable->selectedItems();
 
     if (!listItem.isEmpty()) {
-
+//    Q_ASSERT(progressWidgets.count() % 2 == 0);
         // прыгаем через 3 элемента
         for (int i=0; i<listItem.size() ;i+=3) {
             vyborFile =listItem.at(i)->data(absoluteFileNameRole).toString();
