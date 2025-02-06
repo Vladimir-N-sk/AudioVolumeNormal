@@ -8,12 +8,12 @@ QTPLUGIN.platforms = qminimal qxcb
 
 HEADERS = window.h \
     audio.h \
-    dialog.h
+    pbdialog.h
 
 SOURCES = window.cpp \
 main.cpp \
 audio.cpp \
-    dialog.cpp
+    pbdialog.cpp
 
 #INCLUDEPATH += /media/sdb2/ffmpeg_new/include
 
@@ -24,4 +24,7 @@ audio.cpp \
 #LIBS += -lpostproc -lavformat  -lavcodec -lavutil -lavfilter -lswscale -lavdevice -lswresample -lx264 -lx265
 
 QMAKE_CXXFLAGS_WARN_ON += -Wno-unused
+
+FORMS += \
+    pbdialog.ui
 

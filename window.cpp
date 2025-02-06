@@ -3,7 +3,6 @@
 
 #include "window.h"
 #include "audio.h"
-#include "dialog.h"
 
 enum { absoluteFileNameRole = Qt::UserRole + 1 };
 
@@ -89,8 +88,11 @@ Window::Window(QWidget *parent)
 //    pbDialog->setModal(true);
 //    connect(audio,&Audio::set_pD, pbDialog, &Dialog::set_pb_audio );
 
+//    pbWidget = new pBarWidget();
+//    connect(audio,&Audio::set_pD, pbWidget, &pBarWidget::on_pBarAll_valueChanged );
+
     connect(audio,&Audio::send_max_vol, this, &Window::recv_max_vol );
-    connect(audio,&Audio::set_pD, this, &Window::step_pD );
+//    connect(audio,&Audio::set_pD, this, &Window::step_pD );
 
     sb->showMessage(tr("Для начала работы нажмите <Найти файлы>"));
 
@@ -139,29 +141,38 @@ void Window::work()
     } else {
         if ( rb1->isChecked()) {
 
-            pD = new QProgressDialog(this);
-            pD->setRange(0, 100);
-            pD->setCancelButtonText(tr("Стоп"));
-            pD->setMinimumWidth(400);
-            pD->setMinimumDuration(1000);
-            pD->setValue(0);
-            pD->setModal(true);
-            pD->setWindowTitle(tr("Вычисление уровня аудио") );
-            pD->setLabelText(tr("в файле: ")+vyborFile);
-            pD->setAttribute(Qt::WA_DeleteOnClose);
+//            pD = new QProgressDialog(this);
+//            pD->setRange(0, 100);
+//            pD->setCancelButtonText(tr("Стоп"));
+//            pD->setMinimumWidth(400);
+//            pD->setMinimumDuration(1000);
+//            pD->setValue(0);
+//            pD->setModal(true);
+//            pD->setWindowTitle(tr("Вычисление уровня аудио") );
+//            pD->setLabelText(tr("в файле: ")+vyborFile);
+//            pD->setAttribute(Qt::WA_DeleteOnClose);
 //            connect(pD, &QProgressDialog::canceled, audio, &Audio::recv_cancel_pD);
 
-                pbDialog = new Dialog(this);
-                pbDialog->setModal(true);
-                connect(audio,&Audio::set_pD, pbDialog, &Dialog::set_pb_audio );
+//            pbWidget = new pBarWidget();
+//            connect(audio,&Audio::set_pD, pbWidget, &pBarWidget::on_pBarAll_valueChanged );
 
-            emit send_file_name(vyborFile);
-            pbDialog->show();
+                        pbD = new pbDialog();
+//                        pbD->setModal(true);
+                        connect(audio,&Audio::set_pD, pbD, &pbDialog::on_pBarAudio_valueChanged );
+
+//            emit send_file_name(vyborFile);
+
+//            pbWidget->show();
+                        pbD->show();
+
+
+
 
             audio->audio_level(vyborFile.toUtf8());
 
-//            pbDialog->hide();
-            delete pbDialog;
+//            pbD->hide();
+//            pbWidget->hide();
+//            delete pbWidget;
 
         }
         if ( rb2->isChecked()){

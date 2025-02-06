@@ -88,6 +88,7 @@ void Audio::set_audio_level(QString fileNameIn, QString fileNameOut, QString set
             } else if (line.contains("max_volume:")) {
             }
             emit set_pD(msecFrameTime*100/msecDurTime);
+            QCoreApplication::processEvents();
         }           //process->canReadLine
     }               // rocess->waitForReadyRead
 
@@ -101,7 +102,7 @@ void Audio::set_audio_level(QString fileNameIn, QString fileNameOut, QString set
 void Audio::audio_level(QString fileName )
 {
 
-    qDebug() <<"Start AUDIO_LEVEL";
+    qDebug() <<"*** Start AUDIO_LEVEL";
     int msecDurTime=1, msecFrameTime=0;
     stop = false;
 
@@ -123,7 +124,7 @@ void Audio::audio_level(QString fileName )
                     << "-hide_banner" << "-i" << fileName <<"-af" << filter_vol_detect
                     <<"-vn"<< "-sn"<< "-dn"<<"-f" << "null" << "/dev/null");
 
-    qDebug() <<"Start new process";
+    qDebug() <<"AUDIO_LEVEL Start new process";
 
     if( !process->waitForStarted(1000) ) {
         qDebug() << "***************! ERROR start process!";
@@ -131,6 +132,8 @@ void Audio::audio_level(QString fileName )
     }
 
     emit set_pD(msecFrameTime*100/msecDurTime);
+        qDebug() << "set_pD:"<< (msecFrameTime*100/msecDurTime);
+        QCoreApplication::processEvents();
     while (process->waitForReadyRead(-1)) {
         if (stop) break;
         while(process->canReadLine()){
@@ -154,10 +157,13 @@ void Audio::audio_level(QString fileName )
                 emit send_max_vol(fileName, max);
             }
             emit set_pD(msecFrameTime*100/msecDurTime);
+            qDebug() << "set_pD"<< (msecFrameTime*100/msecDurTime);
+            QCoreApplication::processEvents();
         }           //process->canReadLine
     }               // rocess->waitForReadyRead
 
     emit set_pD(100);
+    qDebug() << "set_pD 100";
     qDebug() << "AUDIO_LEVEL End read from process ";
     process->close();
     delete process;

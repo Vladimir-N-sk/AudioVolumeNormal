@@ -21,7 +21,7 @@
 #include <QFile>
 
 #include "audio.h"
-#include "dialog.h"
+#include "pbdialog.h"
 
 QT_BEGIN_NAMESPACE
 class QComboBox;
@@ -76,7 +76,8 @@ private slots:
 
 private:
     Audio *audio;
-    Dialog *pbDialog;
+    pbDialog *pbD;
+//    pBarWidget *pbWidget;
 
     QStringList findFilesList;
     QStringList vyborFilesList;
