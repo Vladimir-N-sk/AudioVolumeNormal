@@ -133,38 +133,32 @@ void Window::recv_max_vol(QString fName, QString strMVol){
 void Window::work()
 {
 
-    if ( vyborFile.isEmpty() ){
+
+//    if ( vyborFile.isEmpty() ){
+    if ( vyborFilesList.isEmpty() ){
         QMessageBox::information(this, tr("Выбран файл"),
                                  tr("<h2>Внимание!</h2>\n"
                                     "Ни один файл не выбран."),
                                  QMessageBox::Ok, QMessageBox::NoButton);
     } else {
+
+  for (int i = 0; i < vyborFilesList.size(); ++i) {
+
         if ( rb1->isChecked()) {
-
-//            pD = new QProgressDialog(this);
-//            pD->setRange(0, 100);
-//            pD->setCancelButtonText(tr("Стоп"));
-//            pD->setMinimumWidth(400);
-//            pD->setMinimumDuration(1000);
-//            pD->setValue(0);
-//            pD->setModal(true);
-//            pD->setWindowTitle(tr("Вычисление уровня аудио") );
-//            pD->setLabelText(tr("в файле: ")+vyborFile);
-//            pD->setAttribute(Qt::WA_DeleteOnClose);
-//            connect(pD, &QProgressDialog::canceled, audio, &Audio::recv_cancel_pD);
-
-//            pbWidget = new pBarWidget();
-//            connect(audio,&Audio::set_pD, pbWidget, &pBarWidget::on_pBarAll_valueChanged );
 
             pbD = new pbDialog();
             connect(audio,&Audio::set_pD, pbD, &pbDialog::on_pBarAudio_valueChanged );
             connect(this,&Window::send_file_name, pbD, &pbDialog::on_lbAudio_setText );
+            connect(this,&Window::send_file_percent, pbD, &pbDialog::on_pBarAll_valueChanged );
+            connect(this,&Window::send_file_count, pbD, &pbDialog::on_lbAll_setText );
 
-            emit send_file_name(vyborFile);
+            emit send_file_name(vyborFilesList[i]);
+            emit send_file_percent(i*100/vyborFilesList.size());
+            emit send_file_count(QString::number(i));
 
             pbD->show();
 
-            audio->audio_level(vyborFile.toUtf8());
+            audio->audio_level(vyborFilesList[i] );
 
             delete pbD;
 
@@ -247,7 +241,8 @@ void Window::work()
                 }
             }
         }
-    }
+    }  // vyborFilesList.isEmpty()
+    }  // for
 }
 
 void Window::find()
@@ -393,13 +388,15 @@ void Window::work_list()
     listItem = filesTable->selectedItems();
 
     if (!listItem.isEmpty()) {
-//    Q_ASSERT(progressWidgets.count() % 2 == 0);
+    Q_ASSERT(listItem.count() % 3== 0);
         // прыгаем через 3 элемента
+        vyborFilesList.clear();
         for (int i=0; i<listItem.size() ;i+=3) {
             vyborFile =listItem.at(i)->data(absoluteFileNameRole).toString();
             qDebug()<<"I:"<< i <<"***File from listItem:"<<vyborFile;
-            work();
+            vyborFilesList << vyborFile;
         }
+        work();
         showMapFiles();
     } else {
         QMessageBox::information(this, tr("Выбран файл"),
@@ -429,17 +426,18 @@ void Window::contextMenu(const QPoint &pos)
     QAction *action = menu.exec(filesTable->mapToGlobal(pos));
     if (!action)
         return;
-    const QString fileName = fileNameOfItem(item);
+//    const QString fileName = fileNameOfItem(item);
+    vyborFile = fileNameOfItem(item);
     if (action == openAction) {
 //        vyborFile = fileName;
         vyborFilesList.clear();
-        vyborFilesList << fileName;
+        vyborFilesList << vyborFile;
         work();
         showMapFiles();
     }
 #ifndef QT_NO_CLIPBOARD
     else if (action == copyAction)
-        QGuiApplication::clipboard()->setText(QDir::toNativeSeparators(fileName));
+        QGuiApplication::clipboard()->setText(QDir::toNativeSeparators(vyborFile));
 #endif
 }
 

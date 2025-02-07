@@ -58,6 +58,8 @@ protected:
 signals:
 void send_stop_pD();
 void send_file_name(QString);
+void send_file_count(QString);
+void send_file_percent(int);
 
 public slots:
     void step_pD(int step);

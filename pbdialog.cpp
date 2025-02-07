@@ -27,3 +27,8 @@ void pbDialog::on_lbAudio_setText(QString txt)
 {
     ui->lbAudio->setText(QString(tr("в файле: "))+txt );
 }
+
+void pbDialog::on_lbAll_setText(QString num)
+{
+    ui->lbAll->setText(QString(tr("Обработано файлов: "))+num );
+}

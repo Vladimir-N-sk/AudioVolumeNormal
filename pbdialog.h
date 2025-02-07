@@ -18,8 +18,8 @@ public:
 public slots:
     void on_pBarAll_valueChanged(int value);
     void on_pBarAudio_valueChanged(int value);
-
     void on_lbAudio_setText(QString txt);
+    void on_lbAll_setText(QString num);
 
 private:
     Ui::pbDialog *ui;
