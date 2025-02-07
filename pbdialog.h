@@ -16,7 +16,10 @@ public:
     ~pbDialog();
 
 public slots:
+    void on_pBarAll_valueChanged(int value);
     void on_pBarAudio_valueChanged(int value);
+
+    void on_lbAudio_setText(QString txt);
 
 private:
     Ui::pbDialog *ui;

@@ -1,6 +1,5 @@
 #include "pbdialog.h"
 #include "ui_pbdialog.h"
-#include <QDebug>
 
 pbDialog::pbDialog(QWidget *parent) :
     QDialog(parent),
@@ -14,9 +13,17 @@ pbDialog::~pbDialog()
     delete ui;
 }
 
+void pbDialog::on_pBarAll_valueChanged(int value)
+{
+    ui->pBarAll->setValue(value);
+}
+
 void pbDialog::on_pBarAudio_valueChanged(int value)
 {
     ui->pBarAudio->setValue(value);
-    qDebug()<< "on_pBarAudio_valueChanged" << value;
+}
 
+void pbDialog::on_lbAudio_setText(QString txt)
+{
+    ui->lbAudio->setText(QString(tr("в файле: "))+txt );
 }

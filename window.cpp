@@ -156,23 +156,17 @@ void Window::work()
 //            pbWidget = new pBarWidget();
 //            connect(audio,&Audio::set_pD, pbWidget, &pBarWidget::on_pBarAll_valueChanged );
 
-                        pbD = new pbDialog();
-//                        pbD->setModal(true);
-                        connect(audio,&Audio::set_pD, pbD, &pbDialog::on_pBarAudio_valueChanged );
+            pbD = new pbDialog();
+            connect(audio,&Audio::set_pD, pbD, &pbDialog::on_pBarAudio_valueChanged );
+            connect(this,&Window::send_file_name, pbD, &pbDialog::on_lbAudio_setText );
 
-//            emit send_file_name(vyborFile);
+            emit send_file_name(vyborFile);
 
-//            pbWidget->show();
-                        pbD->show();
-
-
-
+            pbD->show();
 
             audio->audio_level(vyborFile.toUtf8());
 
-//            pbD->hide();
-//            pbWidget->hide();
-//            delete pbWidget;
+            delete pbD;
 
         }
         if ( rb2->isChecked()){
