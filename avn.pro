@@ -11,13 +11,12 @@ HEADERS = window.h \
     pbdialog.h \
     pbdialog3.h
 
+
 SOURCES = window.cpp \
 main.cpp \
 audio.cpp \
     pbdialog.cpp \
     pbdialog3.cpp
-
-#INCLUDEPATH += /media/sdb2/ffmpeg_new/include
 
 #CONFIG += static
 

@@ -50,7 +50,6 @@ protected:
     QString filter_vol_detect = "volumedetect";
     QString filter_volume = "volume=";
 
-
 private:
     bool stop;
 
