@@ -83,166 +83,101 @@ Window::Window(QWidget *parent)
     mainLayout->addWidget(gb, 4, 1, 1, 1);
 
     audio = new Audio();
-
-//    pbDialog = new Dialog();
-//    pbDialog->setModal(true);
-//    connect(audio,&Audio::set_pD, pbDialog, &Dialog::set_pb_audio );
-
-//    pbWidget = new pBarWidget();
-//    connect(audio,&Audio::set_pD, pbWidget, &pBarWidget::on_pBarAll_valueChanged );
-
     connect(audio,&Audio::send_max_vol, this, &Window::recv_max_vol );
-//    connect(audio,&Audio::set_pD, this, &Window::step_pD );
+
+    pbD = new pbDialog();
+    connect(audio,&Audio::set_pD, pbD, &pbDialog::on_pBarAudio_valueChanged );
+    connect(this,&Window::send_file_name, pbD, &pbDialog::on_lbAudio_setText );
+    connect(this,&Window::send_file_percent, pbD, &pbDialog::on_pBarAll_valueChanged );
+    connect(this,&Window::send_file_count, pbD, &pbDialog::on_lbAll_setText );
+
+    pbD3 = new pbDialog3();
+    connect(audio,&Audio::set_pS, pbD3, &pbDialog3::on_pBarChange_valueChanged );
+    connect(this,&Window::send_file_name, pbD3, &pbDialog3::on_lbChange_setText );
+    connect(audio,&Audio::set_pD, pbD3, &pbDialog3::on_pBarAudio_valueChanged );
+    connect(this,&Window::send_file_name, pbD3, &pbDialog3::on_lbAudio_setText );
+    connect(this,&Window::send_file_percent, pbD3, &pbDialog3::on_pBarAll_valueChanged );
+    connect(this,&Window::send_file_count, pbD3, &pbDialog3::on_lbAll_setText );
 
     sb->showMessage(tr("Для начала работы нажмите <Найти файлы>"));
 
 }
 
-void Window::browse()
-{
-    QString directory =
-        QDir::toNativeSeparators(QFileDialog::getExistingDirectory(this,
-                                 tr("Выбрать папку"),
-                                 QDir::currentPath()));
-
-    if (!directory.isEmpty()) {
-        if (directoryComboBox->findText(directory) == -1)
-            directoryComboBox->addItem(directory);
-        directoryComboBox->setCurrentIndex(directoryComboBox->findText(directory));
-    }
-}
-
-
-static void updateComboBox(QComboBox *comboBox)
-{
-    if (comboBox->findText(comboBox->currentText()) == -1)
-        comboBox->addItem(comboBox->currentText());
-}
-
-void Window::step_pD(int step)
-{
-    pD->setValue(step);
-}
-
-void Window::recv_max_vol(QString fName, QString strMVol){
-
-    FileVolume.insert(fName, strMVol);
-//    showMapFiles();
-}
 
 void Window::work()
 {
 
-
-//    if ( vyborFile.isEmpty() ){
     if ( vyborFilesList.isEmpty() ){
         QMessageBox::information(this, tr("Выбран файл"),
                                  tr("<h2>Внимание!</h2>\n"
                                     "Ни один файл не выбран."),
                                  QMessageBox::Ok, QMessageBox::NoButton);
     } else {
-
-  for (int i = 0; i < vyborFilesList.size(); ++i) {
-
         if ( rb1->isChecked()) {
-
-            pbD = new pbDialog();
-            connect(audio,&Audio::set_pD, pbD, &pbDialog::on_pBarAudio_valueChanged );
-            connect(this,&Window::send_file_name, pbD, &pbDialog::on_lbAudio_setText );
-            connect(this,&Window::send_file_percent, pbD, &pbDialog::on_pBarAll_valueChanged );
-            connect(this,&Window::send_file_count, pbD, &pbDialog::on_lbAll_setText );
-
-            emit send_file_name(vyborFilesList[i]);
-            emit send_file_percent(i*100/vyborFilesList.size());
-            emit send_file_count(QString::number(i));
-
             pbD->show();
+            for (int i = 0; i < vyborFilesList.size(); ++i) {
 
-            audio->audio_level(vyborFilesList[i] );
+                emit send_file_name(vyborFilesList[i]);
+                emit send_file_percent(i*100/vyborFilesList.size());
+                emit send_file_count(QString::number(i));
 
-            delete pbD;
+                audio->audio_level(vyborFilesList[i] );
 
+            }
+            pbD->hide();
         }
         if ( rb2->isChecked()){
+            pbD3->show();
+            for (int i = 0; i < vyborFilesList.size(); ++i) {
 
-            QString outFile = vyborFile;
-            QString avnFile = vyborFile + ".avn";
+                emit send_file_name(vyborFilesList[i]);
+                emit send_file_percent(i*100/vyborFilesList.size());
+                emit send_file_count(QString::number(i));
 
-            if ( QFile::exists(avnFile) ) {
-                if ( !QFile::remove(avnFile)) {
-                    QMessageBox::warning(this, tr("Выбран файл"), tr("<h2>Внимание!</h2>\n"
-                                                                     "Не удалось удалить старую копию файла"),
-                                         QMessageBox::Ok, QMessageBox::NoButton);
+                QString outFile = vyborFilesList[i];
+                QString avnFile = outFile + ".avn";
 
+                if ( QFile::exists(avnFile) ) {
+                    if ( !QFile::remove(avnFile)) {
+                        QMessageBox::critical(this, tr("Выбран файл"), tr("<h2>Внимание!</h2>\n"
+                                                                         "Не удалось удалить старую копию файла"),
+                                             QMessageBox::Ok, QMessageBox::NoButton);
+                    }
+                }
+
+                if ( FileVolume.value(outFile) == "-.-" ) {
+
+                    audio->audio_level(outFile);
+
+                    if ( QFile::rename(vyborFilesList[i], avnFile) ){
+                        audio->set_audio_level(avnFile, outFile, FileVolume.value(outFile));
+
+                    }else {
+                        QMessageBox::critical(this, tr("Выбран файл"), tr("<h2>Внимание!</h2>\n"
+                                                                         "Не удалось создать копию файла"),
+                                             QMessageBox::Ok, QMessageBox::NoButton);
+                    }
+                } else {
+                    if ( QFile::rename(vyborFilesList[i], avnFile) ){
+                        audio->set_audio_level(avnFile, outFile ,FileVolume.value(outFile));
+
+                    }else {
+                        QMessageBox::warning(this, tr("Выбран файл"), tr("<h2>Внимание!</h2>\n"
+                                                                         "Не удалось создать копию файла"),
+                                             QMessageBox::Ok, QMessageBox::NoButton);
+                    }
                 }
             }
-
-            if ( FileVolume.value(outFile) == "-.-" ) {
-
-                pD = new QProgressDialog(this);
-                pD->setRange(0, 100);
-                pD->setCancelButtonText(tr("Стоп"));
-                pD->setMinimumWidth(400);
-                pD->setMinimumDuration(1000);
-                pD->setValue(0);
-                pD->setModal(true);
-                pD->setLabelText(tr("в файле: ")+vyborFile);
-                pD->setWindowTitle(tr("Вычисление уровня аудио") );
-                pD->setAttribute(Qt::WA_DeleteOnClose);
-                connect(pD, &QProgressDialog::canceled, audio, &Audio::recv_cancel_pD);
-
-                audio->audio_level(vyborFile.toUtf8());
-//                delete pD;
-
-                if ( QFile::rename(vyborFile, avnFile) ){
-
-                    pD = new QProgressDialog(this);
-                    pD->setRange(0, 100);
-                    pD->setCancelButtonText(tr("Стоп"));
-                    pD->setMinimumWidth(400);
-                    pD->setMinimumDuration(1000);
-                    pD->setValue(0);
-                    pD->setModal(true);
-                    pD->setLabelText(tr("в файле: ")+vyborFile);
-                    pD->setWindowTitle(tr("Изменение уровня аудио") );
-                    pD->setAttribute(Qt::WA_DeleteOnClose);
-
-                    connect(pD, &QProgressDialog::canceled, audio, &Audio::recv_cancel_pD);
-
-                    audio->set_audio_level(avnFile.toUtf8(), outFile.toUtf8() ,FileVolume.value(outFile));
-//                    delete pD;
-                }else {
-                    QMessageBox::warning(this, tr("Выбран файл"), tr("<h2>Внимание!</h2>\n"
-                                                                     "Не удалось создать копию файла"),
-                                         QMessageBox::Ok, QMessageBox::NoButton);
-                }
-
-            } else {
-                if ( QFile::rename(vyborFile, avnFile) ){
-
-                    pD = new QProgressDialog(this);
-                    pD->setRange(0, 100);
-                    pD->setCancelButtonText(tr("Стоп"));
-                    pD->setMinimumWidth(400);
-                    pD->setMinimumDuration(1000);
-                    pD->setValue(0);
-                    pD->setModal(true);
-                    pD->setLabelText(tr("в файле: ")+vyborFile);
-                    pD->setWindowTitle(tr("Изменение уровня аудио") );
-                    pD->setAttribute(Qt::WA_DeleteOnClose);
-                    connect(pD, &QProgressDialog::canceled, audio, &Audio::recv_cancel_pD);
-
-                    audio->set_audio_level(avnFile.toUtf8(), outFile.toUtf8() ,FileVolume.value(outFile));
-//                    delete pD;
-                }else {
-                    QMessageBox::warning(this, tr("Выбран файл"), tr("<h2>Внимание!</h2>\n"
-                                                                     "Не удалось создать копию файла"),
-                                         QMessageBox::Ok, QMessageBox::NoButton);
-                }
-            }
+            pbD3->hide();
         }
     }  // vyborFilesList.isEmpty()
-    }  // for
+    //    }  // for
+}
+
+static void updateComboBox(QComboBox *comboBox)
+{
+    if (comboBox->findText(comboBox->currentText()) == -1)
+        comboBox->addItem(comboBox->currentText());
 }
 
 void Window::find()
@@ -441,76 +376,21 @@ void Window::contextMenu(const QPoint &pos)
 #endif
 }
 
-// поиск файлов с подстрокой */
-//QStringList Window::findFiles(const QStringList &files, const QString &text)
-//{
-//    QProgressDialog progressDialog(this);
-//    progressDialog.setCancelButtonText(tr("&Cancel"));
-//    progressDialog.setRange(0, files.size());
-//    progressDialog.setWindowTitle(tr("Find Files"));
-//    progressDialog.setMinimumDuration(0);
+void Window::browse()
+{
+    QString directory =
+        QDir::toNativeSeparators(QFileDialog::getExistingDirectory(this,
+                                 tr("Выбрать папку"),
+                                 QDir::currentPath()));
 
-//    QMimeDatabase mimeDatabase;
-//    QStringList foundFiles;
+    if (!directory.isEmpty()) {
+        if (directoryComboBox->findText(directory) == -1)
+            directoryComboBox->addItem(directory);
+        directoryComboBox->setCurrentIndex(directoryComboBox->findText(directory));
+    }
+}
 
-//    for (int i = 0; i < files.size(); ++i) {
-//        progressDialog.setValue(i);
-//        progressDialog.setLabelText(tr("Searching file number %1 of %n...", nullptr, files.size()).arg(i));
-//        QCoreApplication::processEvents();
 
-//        if (progressDialog.wasCanceled())
-//            break;
-
-//        const QString fileName = files.at(i);
-//        const QMimeType mimeType = mimeDatabase.mimeTypeForFile(fileName);
-////        if (mimeType.isValid() && !mimeType.inherits(QStringLiteral("text/plain"))) {
-////            qWarning() << "Not searching binary file " << QDir::toNativeSeparators(fileName);
-////            continue;
-////        }
-//        QFile file(fileName);
-//        if (file.open(QIODevice::ReadOnly)) {
-//            QString line;
-////            QTextStream in(&file);
-////            while (!in.atEnd()) {
-////                if (progressDialog.wasCanceled())
-////                    break;
-////                line = in.readLine();
-////                if (line.contains(text, Qt::CaseInsensitive)) {
-////                    foundFiles << files[i];
-////                    break;
-////                }
-////            } //end while
-//        }
-//    }
-////    return foundFiles;
-//    return files;
-//}
-
-//void Window::showFiles(const QStringList &paths)
-//{
-//    sb->showMessage(tr("Выполняетя поиск файлов"), 4000);
-
-//    for (const QString &filePath : paths) {
-//        const QString toolTip = QDir::toNativeSeparators(filePath);
-//        const QString relativePath = QDir::toNativeSeparators(currentDir.relativeFilePath(filePath));
-//        const qint64 size = QFileInfo(filePath).size();
-
-//        QTableWidgetItem *fileNameItem = new QTableWidgetItem(relativePath);
-//        fileNameItem->setData(absoluteFileNameRole, QVariant(filePath));
-//        fileNameItem->setToolTip(toolTip);
-//        fileNameItem->setFlags(fileNameItem->flags() ^ Qt::ItemIsEditable);
-
-//        QTableWidgetItem *sizeItem = new QTableWidgetItem(QLocale().formattedDataSize(size));
-//        sizeItem->setData(absoluteFileNameRole, QVariant(filePath));
-//        sizeItem->setToolTip(toolTip);
-//        sizeItem->setTextAlignment(Qt::AlignRight | Qt::AlignVCenter);
-//        sizeItem->setFlags(sizeItem->flags() ^ Qt::ItemIsEditable);
-
-//        int row = filesTable->rowCount();
-//        filesTable->insertRow(row);
-//        filesTable->setItem(row, 0, fileNameItem);
-//        filesTable->setItem(row, 1, sizeItem);
-//    }
-//    filesFoundLabel->setText(tr("Найдено %n медиа файлов", nullptr, paths.size()));
-//    filesFoundLabel->setWordWrap(true);
-//}
+void Window::recv_max_vol(QString fName, QString strMVol){
+    FileVolume.insert(fName, strMVol);
+}

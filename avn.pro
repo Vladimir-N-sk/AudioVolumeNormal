@@ -8,12 +8,14 @@ QTPLUGIN.platforms = qminimal qxcb
 
 HEADERS = window.h \
     audio.h \
-    pbdialog.h
+    pbdialog.h \
+    pbdialog3.h
 
 SOURCES = window.cpp \
 main.cpp \
 audio.cpp \
-    pbdialog.cpp
+    pbdialog.cpp \
+    pbdialog3.cpp
 
 #INCLUDEPATH += /media/sdb2/ffmpeg_new/include
 
@@ -26,5 +28,6 @@ audio.cpp \
 QMAKE_CXXFLAGS_WARN_ON += -Wno-unused
 
 FORMS += \
-    pbdialog.ui
+    pbdialog.ui \
+    pbdialog3.ui
 

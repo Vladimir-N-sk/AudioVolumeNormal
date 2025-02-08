@@ -42,6 +42,7 @@ public slots:
 
 signals:
     void set_pD(int);
+    void set_pS(int);
     void send_max_vol(QString,QString);
 
 protected:

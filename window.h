@@ -22,6 +22,7 @@
 
 #include "audio.h"
 #include "pbdialog.h"
+#include "pbdialog3.h"
 
 QT_BEGIN_NAMESPACE
 class QComboBox;
@@ -62,7 +63,7 @@ void send_file_count(QString);
 void send_file_percent(int);
 
 public slots:
-    void step_pD(int step);
+//    void step_pD(int step);
     void recv_max_vol(QString,QString);
 
 private slots:
@@ -79,7 +80,7 @@ private slots:
 private:
     Audio *audio;
     pbDialog *pbD;
-//    pBarWidget *pbWidget;
+    pbDialog3 *pbD3;
 
     QStringList findFilesList;
     QStringList vyborFilesList;

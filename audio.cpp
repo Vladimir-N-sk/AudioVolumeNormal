@@ -1,7 +1,7 @@
 
 #include "window.h"
 #include "audio.h"
-#include <iostream>
+//#include <iostream>
 #include <string>
 
 void Audio::set_audio_level(QString fileNameIn, QString fileNameOut, QString setDB )
@@ -16,85 +16,72 @@ void Audio::set_audio_level(QString fileNameIn, QString fileNameOut, QString set
     double dDb=setDB.trimmed().toDouble(&ok);
 
     if (!ok) qDebug()<< "SET_AUDIO_LEVEL Conversion double ERROR! Value:" << setDB;
-
+    emit set_pS(0);
     dDb = -1 * dDb;
-    QString strDb=QString::number(dDb)+"dB";
+    if (dDb > 1) {
+        QString strDb=QString::number(dDb)+"dB";
 
-    strDb = filter_volume+strDb;
+        strDb = filter_volume+strDb;
 
-//    qDebug() <<"SET_AUDIO_LEVEL args:"<<setDB
-//                        << "-hide_banner"
-//                        << "-i" << fileNameIn
-//                        <<"-af" << strDb
-//                        <<"-c:v"<< "copy"<< "-c:a"<< "aac"
-//                        <<"-strict"<< "experimental"
-//                        <<fileNameOut;
+        QString dirFFmpeg = QCoreApplication::applicationDirPath()+"/lib";
+        QProcess *process = new QProcess(parent());
+        process->setProcessChannelMode(QProcess::MergedChannels);
+        connect(process, &QProcess::errorOccurred, this, &Audio::log_prog );
 
-    QString dirFFmpeg = QCoreApplication::applicationDirPath()+"/lib";
-    QProcess *process = new QProcess(parent());
-    process->setProcessChannelMode(QProcess::MergedChannels);
-    connect(process, &QProcess::errorOccurred, this, &Audio::log_prog );
+        QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
+        env.insert("LD_LIBRARY_PATH", dirFFmpeg); // Add an environment variable
+        process->setProcessEnvironment(env);
 
-    QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
-    env.insert("LD_LIBRARY_PATH", dirFFmpeg); // Add an environment variable
-    process->setProcessEnvironment(env);
+        process->start( (dirFFmpeg+"/libffmpeg"), QStringList()
+                        << "-y"
+                        << "-hide_banner"
+                        << "-i" << fileNameIn
+                        <<"-af" << strDb
+                        <<"-c:v"<< "copy"<< "-c:a"<< "aac"
+                        <<"-strict"<< "experimental"
+                        <<fileNameOut
+                        );
 
-//    QStringList envList = env.toStringList();
-//    qDebug() <<"ProcessEnvironment:"<<envList;
-//    qDebug() <<"START SET_AUDIO_LEVEL ffmpeg args:"<< "-y"<< "-hide_banner"<< "-i" << fileNameIn<<"-af" << strDb
-//                        <<"-c:v"<< "copy"<< "-c:a"<< "aac"<<"-strict"<< "experimental"<<fileNameOut;
+        if( !process->waitForStarted(1000) ) {
+            qDebug() <<"ERROR START SET_AUDIO_LEVEL args:"<< "-hide_banner"<< "-i" << fileNameIn<<"-af" << strDb
+                    <<"-c:v"<< "copy"<< "-c:a"<< "aac"<<"-strict"<< "experimental"<<fileNameOut;
+            return;
+        }
 
-    process->start( (dirFFmpeg+"/ffmpeg"), QStringList()
-                    << "-y"
-                    << "-hide_banner"
-                    << "-i" << fileNameIn
-                    <<"-af" << strDb
-                    <<"-c:v"<< "copy"<< "-c:a"<< "aac"
-                    <<"-strict"<< "experimental"
-                    <<fileNameOut
-                    );
+        emit set_pS(msecFrameTime*100/msecDurTime);
 
-    if( !process->waitForStarted(1000) ) {
-//        qDebug() <<"ERROR START SET_AUDIO_LEVEL args:"<< "-hide_banner"<< "-i" << fileNameIn<<"-af" << strDb
-//                            <<"-c:v"<< "copy"<< "-c:a"<< "aac"<<"-strict"<< "experimental"<<fileNameOut;
-        return;
-    }
+        while (process->waitForReadyRead(-1)) {
+            if (stop) break;
+            while(process->canReadLine()){
 
+                QString line = QString(process->readLine() );
 
-    //    perFrame = msecFrameTime*100/msecDurTime;
-    emit set_pD(msecFrameTime*100/msecDurTime);
+                //            qDebug()<< "Line from ffmpeg:" << line;
 
-    while (process->waitForReadyRead(-1)) {
-        if (stop) break;
-        while(process->canReadLine()){
+                if ( line.contains("time=") ){
+                    int tt=line.indexOf("bit",0)-(line.indexOf("time",0)+5) ;
+                    QString tim = line.mid(line.indexOf("time",0)+5,tt);
+                    QTime frameTime = QTime::fromString(tim);
 
-            QString line = QString(process->readLine() );
+                    msecFrameTime = QTime(0, 0, 0).msecsTo(frameTime);
 
-//            qDebug()<< "Line from ffmpeg:" << line;
+                } else if ( line.contains("Duration:") ){
+                    int nn=line.indexOf(",",0)-(line.indexOf("Dur",0)+10) ;
+                    QString dur = line.mid(12,nn);
+                    QTime durTime = QTime::fromString(dur);
+                    msecDurTime = QTime(0, 0, 0).msecsTo(durTime);
 
-            if ( line.contains("time=") ){
-                int tt=line.indexOf("bit",0)-(line.indexOf("time",0)+5) ;
-                QString tim = line.mid(line.indexOf("time",0)+5,tt);
-                QTime frameTime = QTime::fromString(tim);
+                } else if (line.contains("max_volume:")) {
+                }
+                emit set_pS(msecFrameTime*100/msecDurTime);
+                QCoreApplication::processEvents();
+            }           //process->canReadLine
+        }               // rocess->waitForReadyRead
 
-                msecFrameTime = QTime(0, 0, 0).msecsTo(frameTime);
-
-            } else if ( line.contains("Duration:") ){
-                int nn=line.indexOf(",",0)-(line.indexOf("Dur",0)+10) ;
-                QString dur = line.mid(12,nn);
-                QTime durTime = QTime::fromString(dur);
-                msecDurTime = QTime(0, 0, 0).msecsTo(durTime);
-
-            } else if (line.contains("max_volume:")) {
-            }
-            emit set_pD(msecFrameTime*100/msecDurTime);
-            QCoreApplication::processEvents();
-        }           //process->canReadLine
-    }               // rocess->waitForReadyRead
-
-    emit set_pD(100);
-    process->close();
-    delete process;
+        process->close();
+        delete process;
+    }  // >1
+    emit set_pS(100);
     qDebug() << "SET_AUDIO_LEVEL END process!";
 }
 
@@ -120,7 +107,7 @@ void Audio::audio_level(QString fileName )
 //    QStringList envList = env.toStringList();
 //    qDebug() <<"ProcessEnvironment:"<<envList;
 
-    process->start( (dirFFmpeg+"/ffmpeg"), QStringList()
+    process->start( (dirFFmpeg+"/libffmpeg"), QStringList()
                     << "-hide_banner" << "-i" << fileName <<"-af" << filter_vol_detect
                     <<"-vn"<< "-sn"<< "-dn"<<"-f" << "null" << "/dev/null");
 
