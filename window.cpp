@@ -24,12 +24,19 @@ Window::Window(QWidget *parent)
     const QIcon folderIcon = QIcon::fromTheme("folder-cyan");
 
     QPushButton *browseButton = new QPushButton(folderIcon, tr("Папки..."), this);
+    browseButton->setStyleSheet("color: black;" "background-color: #00FF55;"
+                              "selection-color: #00FF55;" "selection-background-color: black;");
     connect(browseButton, &QAbstractButton::clicked, this, &Window::browse);
     findButton = new QPushButton(tr(" Найти файлы "), this);
+    findButton->setStyleSheet("color: black;" "background-color: #00FF55;"
+                              "selection-color: #00FF55;" "selection-background-color: black;");
     connect(findButton, &QAbstractButton::clicked, this, &Window::find);
     workButton = new QPushButton(tr("Начать"), this);
+    workButton->setStyleSheet("color: black;" "background-color: #00FF55;"
+                              "selection-color: #00FF55;" "selection-background-color: black;");
     connect(workButton, &QAbstractButton::clicked, this, &Window::work_list);
-    workButton->setDisabled(true);
+//    workButton->setDisabled(true);
+    workButton->hide();
 
     directoryComboBox = createComboBox(QDir::toNativeSeparators(QDir::currentPath()));
     connect(directoryComboBox->lineEdit(), &QLineEdit::returnPressed,
@@ -37,6 +44,7 @@ Window::Window(QWidget *parent)
 
     filesFoundLabel = new QLabel;
     sb = new QStatusBar;
+//    sb1 = new QLabel(sb);
 
     createFilesTable();
 
@@ -59,7 +67,6 @@ Window::Window(QWidget *parent)
 
     mainLayout->addWidget(browseButton, 1, 2);
     mainLayout->addWidget(filesTable, 2, 0, 1, 3);
-//    mainLayout->addWidget(filesFoundLabel, 3, 0, 1, 2);
     mainLayout->addWidget(sb, 3, 0, 1, 2);
     mainLayout->addWidget(findButton, 3, 2);
     mainLayout->addWidget(workButton, 4, 2);
@@ -68,6 +75,10 @@ Window::Window(QWidget *parent)
         qApp, &QApplication::quit);
 /**/
     gb = new QGroupBox(this);
+    gb->setTitle("Задание");
+    gb->setAlignment(Qt::AlignHCenter);
+
+    gb->setStyleSheet("color: black;" "background-color: #70D4E5;");
 
     rb1 = new QRadioButton(tr("Узнать уровень аудио"), gb);
     rb2 = new QRadioButton(tr("Поменять уровень аудио"), gb);
@@ -80,7 +91,7 @@ Window::Window(QWidget *parent)
     hbl->addWidget(rb1, 0);
     hbl->addWidget(rb2, 0);
     gb->setLayout(hbl);
-    mainLayout->addWidget(gb, 4, 1, 1, 1);
+    mainLayout->addWidget(gb, 4, 0, 1, 2);
 
     audio = new Audio();
     connect(audio,&Audio::send_max_vol, this, &Window::recv_max_vol );
@@ -100,7 +111,6 @@ Window::Window(QWidget *parent)
     connect(this,&Window::send_file_count, pbD3, &pbDialog3::on_lbAll_setText );
 
     sb->showMessage(tr("Для начала работы нажмите <Найти файлы>"));
-
 }
 
 
@@ -113,6 +123,7 @@ void Window::work()
                                     "Ни один файл не выбран."),
                                  QMessageBox::Ok, QMessageBox::NoButton);
     } else {
+        sb->showMessage(QString("Выбрано ")+ (QString::number(vyborFilesList.size())) + QString(" файл(ов)."));
         if ( rb1->isChecked()) {
             pbD->show();
             for (int i = 0; i < vyborFilesList.size(); ++i) {
@@ -207,9 +218,13 @@ void Window::find()
         rb2->setDisabled(false);
         createMapFiles(findFilesList);
         showMapFiles();
-        workButton->setDisabled(false);
+//        workButton->setDisabled(false);
+        workButton->setVisible(true);
+       sb->showMessage(QString("Найдено ")+ (QString::number(findFilesList.size())) + QString(" файлов. ")
+                       + QString("Выбираем файлы, <Задание> и <Начать>"));
     } else {
-        workButton->setDisabled(true);
+//        workButton->setDisabled(true);
+        workButton->hide();
         rb1->setDisabled(true);
         rb2->setDisabled(true);
         findFilesList.clear();
@@ -234,17 +249,18 @@ void Window::createMapFiles(const QStringList &findFileNames)
 
 void Window::showMapFiles()
 {
+
+    filesTable->clearContents();
+    int rt = filesTable->rowCount();
+    for (int i = rt ; i >= 0; i--) filesTable->removeRow(i);
+
     QMapIterator<QString, qint64> fs(FileSize);
     QMapIterator<QString, QString> fv(FileVolume);
 
-    filesTable->clearContents();
-
-   int rt = filesTable->rowCount();
-    for (int i = rt ; i >= 0; i--) filesTable->removeRow(i);
-
     while (fs.hasNext()) {
         fs.next();
-        const QString toolTip = QDir::toNativeSeparators(fs.key());
+//        const QString toolTip = QDir::toNativeSeparators(fs.key());
+        const QString toolTip = "Двойной клик и начнется выполнение задания над этим файлом.";
         const QString relativePath = QDir::toNativeSeparators(currentDir.relativeFilePath(fs.key()));
         const qint64 size = QFileInfo(fs.key()).size();
 
@@ -270,8 +286,8 @@ void Window::showMapFiles()
         filesTable->setItem(row, 1, sizeItem);
         filesTable->setItem(row, 2, volumeItem);
     }
-    filesFoundLabel->setText(tr("Найдено %n медиа файлов", nullptr, FileSize.size() ));
-    filesFoundLabel->setWordWrap(true);
+//    filesFoundLabel->setText(tr("Найдено %n медиа файлов", nullptr, FileSize.size() ));
+//    filesFoundLabel->setWordWrap(true);
 }
 
 QComboBox *Window::createComboBox(const QString &text)
@@ -318,7 +334,6 @@ void Window::openFileOfItem(int row, int /* column */)
 void Window::work_list()
 {
     // колличество итемов = строка * столбец
-//    QList<QTableWidgetItem *> listItem = filesTable->selectedItems();
     listItem.clear();
     listItem = filesTable->selectedItems();
 
@@ -328,15 +343,15 @@ void Window::work_list()
         vyborFilesList.clear();
         for (int i=0; i<listItem.size() ;i+=3) {
             vyborFile =listItem.at(i)->data(absoluteFileNameRole).toString();
-            qDebug()<<"I:"<< i <<"***File from listItem:"<<vyborFile;
+//            qDebug()<<"I:"<< i <<"***File from listItem:"<<vyborFile;
             vyborFilesList << vyborFile;
         }
         work();
         showMapFiles();
     } else {
-        QMessageBox::information(this, tr("Выбран файл"),
-                                 tr("<h2>Внимание!</h2>\n"
-                                    "Ни один файл не выбран."),
+        QMessageBox::information(this, tr("Выбор файла"),
+                                 tr("<h2>Внимание!</h2>"
+                                    "<p>Ни один файл не выбран."),
                                  QMessageBox::Ok, QMessageBox::NoButton);
     }
 }
@@ -387,6 +402,11 @@ void Window::browse()
         if (directoryComboBox->findText(directory) == -1)
             directoryComboBox->addItem(directory);
         directoryComboBox->setCurrentIndex(directoryComboBox->findText(directory));
+        FileSize.clear();
+        FileVolume.clear();
+        workButton->hide();
+        sb->showMessage(tr("Для начала работы нажмите <Найти файлы>"));
+        showMapFiles();
     }
 }
 

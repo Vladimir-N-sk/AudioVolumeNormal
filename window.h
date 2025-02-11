@@ -84,7 +84,7 @@ private:
 
     QStringList findFilesList;
     QStringList vyborFilesList;
-    QString vyborFile;
+    QString vyborFile, sb1;
     QStatusBar *sb;
 
 //    void showFiles(const QStringList &paths);
