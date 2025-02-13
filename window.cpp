@@ -74,11 +74,13 @@ Window::Window(QWidget *parent)
     connect(new QShortcut(QKeySequence::Quit, this), &QShortcut::activated,
         qApp, &QApplication::quit);
 /**/
-    gb = new QGroupBox(this);
-    gb->setTitle("Задание");
+//    gb = new QGroupBox(this);
+    gb = new QGroupBox(tr("Задание"));
     gb->setAlignment(Qt::AlignHCenter);
 
-    gb->setStyleSheet("color: black;" "background-color: #70D4E5;");
+//    gb->setStyleSheet("color: black;" "background-color: #70D4E5;" );
+//    gb->setStyleSheet("color: black;" "background-color: #D6D2D0;" );
+    gb->setStyleSheet("color: white;" "background-color: #B6B6B6;" );
 
     rb1 = new QRadioButton(tr("Узнать уровень аудио"), gb);
     rb2 = new QRadioButton(tr("Поменять уровень аудио"), gb);
@@ -128,7 +130,10 @@ void Window::work()
             pbD->show();
             for (int i = 0; i < vyborFilesList.size(); ++i) {
 
-                emit send_file_name(vyborFilesList[i]);
+//                emit send_file_name(vyborFilesList[i]);
+
+                emit send_file_name( QFileInfo(vyborFilesList[i]).fileName() );
+
                 emit send_file_percent(i*100/vyborFilesList.size());
                 emit send_file_count(QString::number(i));
 
@@ -141,7 +146,8 @@ void Window::work()
             pbD3->show();
             for (int i = 0; i < vyborFilesList.size(); ++i) {
 
-                emit send_file_name(vyborFilesList[i]);
+//                emit send_file_name(vyborFilesList[i]);
+                emit send_file_name( QFileInfo(vyborFilesList[i]).fileName() );
                 emit send_file_percent(i*100/vyborFilesList.size());
                 emit send_file_count(QString::number(i));
 
@@ -208,22 +214,15 @@ void Window::find()
     while (it.hasNext())
         findFilesList << it.next();
 
-//    QString text = "AVN";
-//    if (!text.isEmpty())
-//        files = findFiles(files, text);
-//    files.sort();
-
     if (!findFilesList.isEmpty()) {
         rb1->setDisabled(false);
         rb2->setDisabled(false);
         createMapFiles(findFilesList);
         showMapFiles();
-//        workButton->setDisabled(false);
         workButton->setVisible(true);
        sb->showMessage(QString("Найдено ")+ (QString::number(findFilesList.size())) + QString(" файлов. ")
                        + QString("Выбираем файлы, <Задание> и <Начать>"));
     } else {
-//        workButton->setDisabled(true);
         workButton->hide();
         rb1->setDisabled(true);
         rb2->setDisabled(true);

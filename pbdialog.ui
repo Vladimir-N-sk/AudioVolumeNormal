@@ -31,7 +31,7 @@
     <widget class="QProgressBar" name="pBarAll">
      <property name="maximumSize">
       <size>
-       <width>579</width>
+       <width>12000</width>
        <height>16777215</height>
       </size>
      </property>
@@ -57,7 +57,7 @@
     <widget class="QProgressBar" name="pBarAudio">
      <property name="maximumSize">
       <size>
-       <width>579</width>
+       <width>12000</width>
        <height>16777215</height>
       </size>
      </property>
