@@ -78,9 +78,9 @@ Window::Window(QWidget *parent)
     gb = new QGroupBox(tr("Задание"));
     gb->setAlignment(Qt::AlignHCenter);
 
-//    gb->setStyleSheet("color: black;" "background-color: #70D4E5;" );
+    gb->setStyleSheet("color: black;" "background-color: #70D4E5;" );
 //    gb->setStyleSheet("color: black;" "background-color: #D6D2D0;" );
-    gb->setStyleSheet("color: white;" "background-color: #B6B6B6;" );
+//    gb->setStyleSheet("color: white;" "background-color: #B6B6B6;" );
 
     rb1 = new QRadioButton(tr("Узнать уровень аудио"), gb);
     rb2 = new QRadioButton(tr("Поменять уровень аудио"), gb);
@@ -97,6 +97,7 @@ Window::Window(QWidget *parent)
 
     audio = new Audio();
     connect(audio,&Audio::send_max_vol, this, &Window::recv_max_vol );
+    connect(audio,&Audio::send_codec, this, &Window::recv_codec );
 
     pbD = new pbDialog();
     connect(audio,&Audio::set_pD, pbD, &pbDialog::on_pBarAudio_valueChanged );
@@ -167,8 +168,7 @@ void Window::work()
                     audio->audio_level(outFile);
 
                     if ( QFile::rename(vyborFilesList[i], avnFile) ){
-                        audio->set_audio_level(avnFile, outFile, FileVolume.value(outFile));
-
+                        audio->set_audio_level(avnFile, outFile, FileVolume.value(outFile), FileCodec.value(outFile));
                     }else {
                         QMessageBox::critical(this, tr("Выбран файл"), tr("<h2>Внимание!</h2>\n"
                                                                          "Не удалось создать копию файла"),
@@ -176,8 +176,7 @@ void Window::work()
                     }
                 } else {
                     if ( QFile::rename(vyborFilesList[i], avnFile) ){
-                        audio->set_audio_level(avnFile, outFile ,FileVolume.value(outFile));
-
+                        audio->set_audio_level(avnFile, outFile ,FileVolume.value(outFile), FileCodec.value(outFile) );
                     }else {
                         QMessageBox::warning(this, tr("Выбран файл"), tr("<h2>Внимание!</h2>\n"
                                                                          "Не удалось создать копию файла"),
@@ -240,9 +239,11 @@ void Window::createMapFiles(const QStringList &findFileNames)
 {
     FileSize.clear();
     FileVolume.clear();
+    FileCodec.clear();
     for (const QString &filePathName : findFileNames) {
         FileSize.insert(filePathName, QFileInfo(filePathName).size());
         FileVolume.insert(filePathName, "-.-");
+        FileCodec.insert(filePathName, "---");
     }
 }
 
@@ -255,6 +256,7 @@ void Window::showMapFiles()
 
     QMapIterator<QString, qint64> fs(FileSize);
     QMapIterator<QString, QString> fv(FileVolume);
+    QMapIterator<QString, QString> fc(FileCodec);
 
     while (fs.hasNext()) {
         fs.next();
@@ -278,12 +280,20 @@ void Window::showMapFiles()
         volumeItem->setData(absoluteFileNameRole, QVariant(fs.key()));
         volumeItem->setToolTip(toolTip);
         volumeItem->setTextAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
-        volumeItem->setFlags(fileNameItem->flags() ^ Qt::ItemIsEditable);
+        volumeItem->setFlags(volumeItem->flags() ^ Qt::ItemIsEditable);
+
+        QTableWidgetItem *codecItem = new QTableWidgetItem( FileCodec[fs.key()] );
+        codecItem->setData(absoluteFileNameRole, QVariant(fs.key()));
+        codecItem->setToolTip(toolTip);
+        codecItem->setTextAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
+        codecItem->setFlags(codecItem->flags() ^ Qt::ItemIsEditable);
+
         int row = filesTable->rowCount();
         filesTable->insertRow(row);
         filesTable->setItem(row, 0, fileNameItem);
         filesTable->setItem(row, 1, sizeItem);
         filesTable->setItem(row, 2, volumeItem);
+        filesTable->setItem(row, 3, codecItem);
     }
 //    filesFoundLabel->setText(tr("Найдено %n медиа файлов", nullptr, FileSize.size() ));
 //    filesFoundLabel->setWordWrap(true);
@@ -300,11 +310,11 @@ QComboBox *Window::createComboBox(const QString &text)
 
 void Window::createFilesTable()
 {
-    filesTable = new QTableWidget(0, 3);
+    filesTable = new QTableWidget(0, 4);
     filesTable->setSelectionBehavior(QAbstractItemView::SelectRows);
 
     QStringList labels;
-    labels << tr("Filename") << tr("Size")<< tr("Volume (dB)");
+    labels << tr("Filename") << tr("Size")<< tr("Volume (dB)")<< tr("Codec");
     filesTable->setHorizontalHeaderLabels(labels);
     filesTable->horizontalHeader()->setSectionResizeMode(0, QHeaderView::Stretch);
     filesTable->verticalHeader()->hide();
@@ -316,7 +326,6 @@ void Window::createFilesTable()
             this, &Window::contextMenu);
     connect(filesTable, &QTableWidget::cellActivated,
             this, &Window::openFileOfItem);
-
 }
 
 
@@ -403,6 +412,7 @@ void Window::browse()
         directoryComboBox->setCurrentIndex(directoryComboBox->findText(directory));
         FileSize.clear();
         FileVolume.clear();
+        FileCodec.clear();
         workButton->hide();
         sb->showMessage(tr("Для начала работы нажмите <Найти файлы>"));
         showMapFiles();
@@ -412,4 +422,8 @@ void Window::browse()
 
 void Window::recv_max_vol(QString fName, QString strMVol){
     FileVolume.insert(fName, strMVol);
+}
+
+void Window::recv_codec(QString fName, QString strCodec){
+    FileCodec.insert(fName, strCodec);
 }

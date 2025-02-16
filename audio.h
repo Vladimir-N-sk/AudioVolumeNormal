@@ -11,6 +11,7 @@
 #include <QTime>
 #include <QProcessEnvironment>
 #include <QCoreApplication>
+#include <QMessageBox>
 
 class Audio : public QObject
 {
@@ -19,14 +20,10 @@ public:
     explicit Audio(QObject *parent = nullptr);
     virtual ~Audio();
 
-//    void audio_level(const char* fileName );
     void audio_level(QString fileName );
-    void set_audio_level(QString fileNameIn, QString fileNameOut, QString setDB);
+    void set_audio_level(QString fileNameIn, QString fileNameOut, QString setDB, QString codec);
 
     void log_prog(QProcess::ProcessError process_error);
-//    void Client::displayError(QLocalSocket::LocalSocketError socketError)
-//    int exit_prog(int);
-//    void logging(const char *fmt, ...);
 
     int current_frame;
     int all_frame;
@@ -44,6 +41,7 @@ signals:
     void set_pD(int);
     void set_pS(int);
     void send_max_vol(QString,QString);
+    void send_codec(QString,QString);
 
 protected:
     QProcess *process;
@@ -54,8 +52,5 @@ private:
     bool stop;
 
 };
-
-//void get_max_vol(void *ptr, int, const char *fmt, va_list vl);
-
 
 #endif // AUDIO_H

@@ -1,13 +1,12 @@
 
 #include "window.h"
 #include "audio.h"
-//#include <iostream>
-#include <string>
+//#include <string>
 
-void Audio::set_audio_level(QString fileNameIn, QString fileNameOut, QString setDB )
+void Audio::set_audio_level(QString fileNameIn, QString fileNameOut, QString setDB, QString codec )
 {
 
-    qDebug() <<"Start SET_AUDIO_LEVEL";
+//    qDebug() <<"Start SET_AUDIO_LEVEL";
 
     int msecDurTime=1, msecFrameTime=0;
     stop = false;
@@ -37,16 +36,24 @@ void Audio::set_audio_level(QString fileNameIn, QString fileNameOut, QString set
                         << "-hide_banner"
                         << "-i" << fileNameIn
                         <<"-af" << strDb
-                        <<"-c:v"<< "copy"<< "-c:a"<< "aac"
+                        <<"-c:s"<< "copy"<<"-c:v"<< "copy"
+                        << "-c:a"<< codec
                         <<"-strict"<< "experimental"
                         <<fileNameOut
                         );
 
+//-metadata comment="Audio Volume Normal"
+//        -c:s copy
+
         if( !process->waitForStarted(1000) ) {
-            qDebug() <<"ERROR START SET_AUDIO_LEVEL args:"<< "-hide_banner"<< "-i" << fileNameIn<<"-af" << strDb
-                    <<"-c:v"<< "copy"<< "-c:a"<< "aac"<<"-strict"<< "experimental"<<fileNameOut;
+            qDebug() <<"ERROR START SET_AUDIO_LEVEL args: "<<(dirFFmpeg+"/libffmpeg") << " -hide_banner "<< " -i " << fileNameIn<<" -af "
+                    << strDb<<" -c:s "<< " copy " <<" -c:v "<< " copy "<< " -c:a "<< codec<<" -strict experimental "<<fileNameOut;
             return;
         }
+
+        qDebug() <<"START SET_AUDIO_LEVEL args: "  << (dirFFmpeg+"/libffmpeg")  << " -hide_banner "<< " -i " << fileNameIn<<" -af "
+                << strDb<<" -c:s "<< " copy "  <<" -c:v "<< " copy "<< " -c:a "<< codec<<" -strict experimental "<<fileNameOut;
+
 
         emit set_pS(msecFrameTime*100/msecDurTime);
 
@@ -80,7 +87,7 @@ void Audio::set_audio_level(QString fileNameIn, QString fileNameOut, QString set
 
         process->close();
         delete process;
-    }  // >1
+    } else { qDebug()<< "AUDIO_LEVEL < 1dB:" << setDB; }   // >1
     emit set_pS(100);
     qDebug() << "SET_AUDIO_LEVEL END process!";
 }
@@ -89,8 +96,8 @@ void Audio::set_audio_level(QString fileNameIn, QString fileNameOut, QString set
 void Audio::audio_level(QString fileName )
 {
 
-    qDebug() <<"*** Start AUDIO_LEVEL";
-    int msecDurTime=1, msecFrameTime=0;
+//    qDebug() <<"*** Start AUDIO_LEVEL";
+    int msecDurTime=1, msecFrameTime=0, streamAudio=0;
     stop = false;
 
     QString dirFFmpeg = QCoreApplication::applicationDirPath()+"/lib";
@@ -104,28 +111,37 @@ void Audio::audio_level(QString fileName )
     env.insert("LD_LIBRARY_PATH", dirFFmpeg); // Add an environment variable
     process->setProcessEnvironment(env);
 
-//    QStringList envList = env.toStringList();
-//    qDebug() <<"ProcessEnvironment:"<<envList;
+//    if ( !QFile::exists(dirFFmpeg+"/libffmpeg") ) {
+//        exit(1);
+//    }
 
     process->start( (dirFFmpeg+"/libffmpeg"), QStringList()
                     << "-hide_banner" << "-i" << fileName <<"-af" << filter_vol_detect
                     <<"-vn"<< "-sn"<< "-dn"<<"-f" << "null" << "/dev/null");
 
-    qDebug() <<"AUDIO_LEVEL Start new process";
+//    qDebug() <<"AUDIO_LEVEL Start new process";
 
     if( !process->waitForStarted(1000) ) {
-        qDebug() << "***************! ERROR start process!";
+        qDebug() <<"ERROR START AUDIO_LEVEL args: "<<(dirFFmpeg+"/libffmpeg")
+                << " -hide_banner " << " -i " << fileName <<" -af " << filter_vol_detect
+                <<" -vn "<< " -sn "<< " -dn "<<" -f " << " null " << " /dev/null";
         return;
     }
 
+    qDebug() <<"START AUDIO_LEVEL args: "<<(dirFFmpeg+"/libffmpeg")
+            << " -hide_banner " << " -i " << fileName <<" -af " << filter_vol_detect
+            <<" -vn "<< " -sn "<< " -dn "<<" -f " << " null " << " /dev/null";
+
     emit set_pD(msecFrameTime*100/msecDurTime);
-        qDebug() << "set_pD:"<< (msecFrameTime*100/msecDurTime);
+//        qDebug() << "set_pD:"<< (msecFrameTime*100/msecDurTime);
         QCoreApplication::processEvents();
     while (process->waitForReadyRead(-1)) {
         if (stop) break;
         while(process->canReadLine()){
             QString line = QString(process->readLine() );
+
 //            qDebug()<< "Line from ffmpeg:" << line;
+
             if ( line.contains("time=") ){
                 int tt=line.indexOf("bit",0)-(line.indexOf("time",0)+5) ;
                 QString tim = line.mid(line.indexOf("time",0)+5,tt);
@@ -140,18 +156,25 @@ void Audio::audio_level(QString fileName )
             } else if (line.contains("max_volume:")) {
                 int mm=line.indexOf("dB",0)-(line.indexOf("max_vol",0)+11) ;
                 QString max = line.mid(52,mm).trimmed();
-//                qDebug() << "***********************************AUDIO_LEVEL Max Volume:"<< max<<"<dB>";
                 emit send_max_vol(fileName, max);
+            } else if ( line.contains("Audio:") && streamAudio == 0  ) {
+                streamAudio++;
+                int aa=line.indexOf("Audio:",0);
+                int bb=line.indexOf(" ", aa+8);
+                int cc = bb-aa-7;
+                QString cod = line.mid(aa+7,cc).trimmed();
+                emit send_codec(fileName, cod);
             }
+
             emit set_pD(msecFrameTime*100/msecDurTime);
-            qDebug() << "set_pD"<< (msecFrameTime*100/msecDurTime);
+//            qDebug() << "set_pD"<< (msecFrameTime*100/msecDurTime);
             QCoreApplication::processEvents();
         }           //process->canReadLine
     }               // rocess->waitForReadyRead
 
     emit set_pD(100);
-    qDebug() << "set_pD 100";
-    qDebug() << "AUDIO_LEVEL End read from process ";
+//    qDebug() << "set_pD 100";
+    qDebug() << "AUDIO_LEVEL End process.";
     process->close();
     delete process;
 }

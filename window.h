@@ -42,16 +42,15 @@ class Window : public QWidget
 public:
     Window(QWidget *parent = nullptr);
 
-
     QStringList findFiles(const QStringList &files, const QString &text);
     QProgressDialog *pD;
-
 
 friend class Audio;
 
 protected:
     QMap<QString, qint64> FileSize;
     QMap<QString, QString> FileVolume;
+    QMap<QString, QString> FileCodec;
     QString strMaxVolume;
     QList<QTableWidgetItem *> listItem;
 
@@ -63,8 +62,8 @@ void send_file_count(QString);
 void send_file_percent(int);
 
 public slots:
-//    void step_pD(int step);
-    void recv_max_vol(QString,QString);
+    void recv_max_vol(QString, QString);
+    void recv_codec(QString, QString);
 
 private slots:
     void browse();
@@ -106,8 +105,8 @@ private:
     QRadioButton *rb3;   // переключателя.
     QDir currentDir;
 
-    void audio_level(const char* fileName);
-    void logging(const char *fmt, ...);
+//    void audio_level(const char* fileName);
+//    void logging(const char *fmt, ...);
 
 
 };
