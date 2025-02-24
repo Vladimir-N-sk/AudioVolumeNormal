@@ -119,6 +119,7 @@ int main(int argc, char *argv[])
 
 
     QString logfilePath = QStringLiteral("/home/monsys/avn.log");
+//    QString logfilePath = QCoreApplication::applicationDirPath()+"/avn.log";
     QFile outFile(logfilePath);
     outFile.open(QIODevice::WriteOnly | QIODevice::Append);
     output_ts.setDevice(&outFile);

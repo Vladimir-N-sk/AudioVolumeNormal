@@ -155,7 +155,8 @@ void Audio::audio_level(QString fileName )
 
             } else if (line.contains("max_volume:")) {
                 int mm=line.indexOf("dB",0)-(line.indexOf("max_vol",0)+11) ;
-                QString max = line.mid(52,mm).trimmed();
+//                QString max = line.mid(52,mm).trimmed();
+                QString max = line.mid(line.indexOf("max_vol",0)+11 ,mm).trimmed();
                 emit send_max_vol(fileName, max);
             } else if ( line.contains("Audio:") && streamAudio == 0  ) {
                 streamAudio++;
