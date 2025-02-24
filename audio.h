@@ -21,7 +21,7 @@ public:
     virtual ~Audio();
 
     void audio_level(QString fileName );
-    void set_audio_level(QString fileNameIn, QString fileNameOut, QString setDB, QString codec);
+    void set_audio_level(QString fileNameIn, QString fileNameOut, QString strDb, QString codec);
 
     void log_prog(QProcess::ProcessError process_error);
 

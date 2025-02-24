@@ -1,9 +1,8 @@
 
 #include "window.h"
 #include "audio.h"
-//#include <string>
 
-void Audio::set_audio_level(QString fileNameIn, QString fileNameOut, QString setDB, QString codec )
+void Audio::set_audio_level(QString fileNameIn, QString fileNameOut, QString strDb, QString codec )
 {
 
 //    qDebug() <<"Start SET_AUDIO_LEVEL";
@@ -11,16 +10,16 @@ void Audio::set_audio_level(QString fileNameIn, QString fileNameOut, QString set
     int msecDurTime=1, msecFrameTime=0;
     stop = false;
 
-    bool ok;
-    double dDb=setDB.trimmed().toDouble(&ok);
+//    bool ok;
+//    double dDb=setDB.trimmed().toDouble(&ok);
+//    if (!ok) qDebug()<< "SET_AUDIO_LEVEL Conversion double ERROR! Value:" << setDB;
 
-    if (!ok) qDebug()<< "SET_AUDIO_LEVEL Conversion double ERROR! Value:" << setDB;
     emit set_pS(0);
-    dDb = -1 * dDb;
-    if (dDb > 1) {
-        QString strDb=QString::number(dDb)+"dB";
+//    double dDb = -1 * dDb;
+//    if (dDb > 1) {
+//        QString strDb=QString::number(dDb)+"dB";
 
-        strDb = filter_volume+strDb;
+//        strDb = filter_volume+strDb;
 
         QString dirFFmpeg = QCoreApplication::applicationDirPath()+"/lib";
         QProcess *process = new QProcess(parent());
@@ -87,7 +86,7 @@ void Audio::set_audio_level(QString fileNameIn, QString fileNameOut, QString set
 
         process->close();
         delete process;
-    } else { qDebug()<< "AUDIO_LEVEL < 1dB:" << setDB; }   // >1
+//    } else { qDebug()<< "AUDIO_LEVEL < 1dB:" << setDB; }   // >1
     emit set_pS(100);
     qDebug() << "SET_AUDIO_LEVEL END process!";
 }

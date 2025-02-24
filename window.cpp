@@ -144,12 +144,17 @@ void Window::work()
             pbD->hide();
         }
         if ( rb2->isChecked()){
+            bool ok; double dDb;
             pbD3->show();
             for (int i = 0; i < vyborFilesList.size(); ++i) {
 
-//                emit send_file_name(vyborFilesList[i]);
+                // Посылаем на форму имя обрабатываемого файла
                 emit send_file_name( QFileInfo(vyborFilesList[i]).fileName() );
+
+                // Посылаем на форму %% обработанных файлов
                 emit send_file_percent(i*100/vyborFilesList.size());
+
+                // Посылаем на форму NN обработанных файлов
                 emit send_file_count(QString::number(i));
 
                 QString outFile = vyborFilesList[i];
@@ -167,21 +172,44 @@ void Window::work()
 
                     audio->audio_level(outFile);
 
-                    if ( QFile::rename(vyborFilesList[i], avnFile) ){
-                        audio->set_audio_level(avnFile, outFile, FileVolume.value(outFile), FileCodec.value(outFile));
-                    }else {
-                        QMessageBox::critical(this, tr("Выбран файл"), tr("<h2>Внимание!</h2>\n"
-                                                                         "Не удалось создать копию файла"),
-                                             QMessageBox::Ok, QMessageBox::NoButton);
+                    dDb=FileVolume.value(outFile).trimmed().toDouble(&ok);
+                    if (!ok) {
+                        qDebug()<< "FileVolume.value Conversion double ERROR! Value:" << FileVolume.value(outFile);
+                        exit(1);
+                    }
+                    dDb = -1 * dDb;
+                    if (dDb > 1) {
+
+                        QString strDb="volume=" + QString::number(dDb)+"dB";
+
+                        if ( QFile::rename(vyborFilesList[i], avnFile) ){
+                            audio->set_audio_level(avnFile, outFile, strDb, FileCodec.value(outFile));
+                        }else {
+                            QMessageBox::critical(this, tr("Выбран файл"), tr("<h2>Внимание!</h2>\n"
+                                                                              "Не удалось создать копию файла"),
+                                                  QMessageBox::Ok, QMessageBox::NoButton);
+                        }
                     }
                 } else {
-                    if ( QFile::rename(vyborFilesList[i], avnFile) ){
-                        audio->set_audio_level(avnFile, outFile ,FileVolume.value(outFile), FileCodec.value(outFile) );
-                    }else {
-                        QMessageBox::warning(this, tr("Выбран файл"), tr("<h2>Внимание!</h2>\n"
-                                                                         "Не удалось создать копию файла"),
-                                             QMessageBox::Ok, QMessageBox::NoButton);
+
+                    dDb=FileVolume.value(outFile).trimmed().toDouble(&ok);
+                    if (!ok) {
+                        qDebug()<< "FileVolume.value Conversion double ERROR! Value:" << FileVolume.value(outFile);
+                        exit(1);
                     }
+                    dDb = -1 * dDb;
+                    if (dDb > 1) {
+                        QString strDb="volume=" + QString::number(dDb)+"dB";
+                        if ( QFile::rename(vyborFilesList[i], avnFile) ){
+                            audio->set_audio_level(avnFile, outFile, strDb, FileCodec.value(outFile) );
+                        }else {
+                            QMessageBox::warning(this, tr("Выбран файл"), tr("<h2>Внимание!</h2>\n"
+                                                                             "Не удалось создать копию файла"),
+                                                 QMessageBox::Ok, QMessageBox::NoButton);
+                        }
+                    }
+
+
                 }
             }
             pbD3->hide();
