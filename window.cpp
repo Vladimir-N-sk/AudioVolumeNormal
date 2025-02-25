@@ -60,7 +60,29 @@ Window::Window(QWidget *parent)
 
     mainLayout->addWidget(new QLabel(tr("Найти файлы")), 0, 0, 1, 1);
     mainLayout->addWidget(new QLabel(tr("формата медиа: mkv avi mp4 mp3")), 0, 1, 1, 1, Qt::AlignLeft);
+//    mainLayout->addWidget(new QLabel(tr("<Ctrl-Q> - выход")), 0, 2, 1, 1, Qt::AlignRight);
+
+
+//    qDebug() << "currentCpuArchitecture():" << QSysInfo::currentCpuArchitecture();
+//    qDebug() << "productType():" << QSysInfo::productType();
+//    qDebug() << "productVersion():" << QSysInfo::productVersion();
+//    qDebug() << "prettyProductName():" << QSysInfo::prettyProductName();
+
+//    Typical result:
+
+//    21:43:09.855 Debug: currentCpuArchitecture(): "x86_64"
+//    21:43:09.855 Debug: productType(): "windows"
+//    21:43:09.855 Debug: productVersion(): "10"
+//    21:43:09.855 Debug: prettyProductName(): "Windows 10 (10.0)"
+
+
+#ifdef Q_OS_LINUX
     mainLayout->addWidget(new QLabel(tr("<Ctrl-Q> - выход")), 0, 2, 1, 1, Qt::AlignRight);
+#elif defined(Q_OS_WIN)
+    mainLayout->addWidget(new QLabel(tr("<Alt-F4> - выход")), 0, 2, 1, 1, Qt::AlignRight);
+#else
+  qDebug() << "We don't support that version OS";
+#endif
 
     mainLayout->addWidget(new QLabel(tr("В папке:")), 1, 0);
     mainLayout->addWidget(directoryComboBox, 1, 1);
@@ -74,7 +96,6 @@ Window::Window(QWidget *parent)
     connect(new QShortcut(QKeySequence::Quit, this), &QShortcut::activated,
         qApp, &QApplication::quit);
 /**/
-//    gb = new QGroupBox(this);
     gb = new QGroupBox(tr("Задание"));
     gb->setAlignment(Qt::AlignHCenter);
 
@@ -234,9 +255,14 @@ void Window::find()
 
     updateComboBox(directoryComboBox);
 
-    QDirIterator it(path, {"*.mkv","*.avi","*.mp4","*.mp3"},
-                    QDir::AllEntries | QDir::NoSymLinks | QDir::NoDotAndDotDot,
-                    QDirIterator::Subdirectories);
+//    QDirIterator it(path, {"*.mkv","*.avi","*.mp4"},
+//                    QDir::AllEntries | QDir::NoSymLinks | QDir::NoDotAndDotDot,
+//                    QDirIterator::Subdirectories);
+
+//Без субдиреториев (для скорости)
+    QDirIterator it(path, {"*.mkv","*.avi","*.mp4"},
+                    QDir::AllEntries | QDir::NoSymLinks | QDir::NoDotAndDotDot
+                    );
 
     while (it.hasNext())
         findFilesList << it.next();

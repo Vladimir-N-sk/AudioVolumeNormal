@@ -19,6 +19,7 @@
 #include <QTextCodec>
 #include <QTime>
 #include <QFile>
+#include <QSysInfo>
 
 #include "audio.h"
 #include "pbdialog.h"

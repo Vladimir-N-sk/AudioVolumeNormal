@@ -4,9 +4,6 @@
 
 #include "window.h"
 
-//QString logFilePath = "avn.log";
-//bool logToFile = false;
-
 //void customMessageOutput(QtMsgType type, const QMessageLogContext &context, const QString &msg)
 //{
 //    QHash<QtMsgType, QString> msgLevelHash({{QtDebugMsg, "Debug"}, {QtInfoMsg, "Info"}, {QtWarningMsg, "Warning"}, {QtCriticalMsg, "Critical"}, {QtFatalMsg, "Fatal"}});
@@ -68,28 +65,21 @@ int main(int argc, char *argv[])
 
     qDebug() << "See log file avn.log";
 
-//    QByteArray envVar = qgetenv("QTDIR");       //  check if the app is ran in Qt Creator
-//    if (envVar.isEmpty())
-//        logToFile = true;
-//    qInstallMessageHandler(customMessageOutput); // custom message handler for debugging
-
-
-//    QString logfilePath = QStringLiteral("/home/monsys/avn.log");
     QString logfilePath = QCoreApplication::applicationDirPath()+"/avn.log";
     QFile outFile(logfilePath);
     outFile.open(QIODevice::WriteOnly | QIODevice::Truncate);
     output_ts.setDevice(&outFile);
     qInstallMessageHandler(myMessageHandler);
 
+    qDebug() << "Audio Volume Normal start";
+    qDebug() << "SysInfo: "<< QSysInfo::prettyProductName() << " " << QSysInfo::currentCpuArchitecture();
 
-//    QApplication app(argc, argv);
     QCoreApplication::setOrganizationName("Vladimir-N-sk");
     QCoreApplication::setApplicationName("Audio Volume Normal");
     QCoreApplication::setApplicationVersion("1.1");
     QCoreApplication::setOrganizationDomain("alvladnik@gmail.com");
     Window AudioWin;
 
-//     AudioWin.setFixedSize(640,480);
      AudioWin.setMinimumSize(1280, 720);
 //     AudioWin.setMinimumSize(640,480);
 
