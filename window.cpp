@@ -59,22 +59,7 @@ Window::Window(QWidget *parent)
 */
 
     mainLayout->addWidget(new QLabel(tr("Найти файлы")), 0, 0, 1, 1);
-    mainLayout->addWidget(new QLabel(tr("формата медиа: mkv avi mp4 mp3")), 0, 1, 1, 1, Qt::AlignLeft);
-//    mainLayout->addWidget(new QLabel(tr("<Ctrl-Q> - выход")), 0, 2, 1, 1, Qt::AlignRight);
-
-
-//    qDebug() << "currentCpuArchitecture():" << QSysInfo::currentCpuArchitecture();
-//    qDebug() << "productType():" << QSysInfo::productType();
-//    qDebug() << "productVersion():" << QSysInfo::productVersion();
-//    qDebug() << "prettyProductName():" << QSysInfo::prettyProductName();
-
-//    Typical result:
-
-//    21:43:09.855 Debug: currentCpuArchitecture(): "x86_64"
-//    21:43:09.855 Debug: productType(): "windows"
-//    21:43:09.855 Debug: productVersion(): "10"
-//    21:43:09.855 Debug: prettyProductName(): "Windows 10 (10.0)"
-
+    mainLayout->addWidget(new QLabel(tr("формата медиа: mkv avi mp4")), 0, 1, 1, 1, Qt::AlignLeft);
 
 #ifdef Q_OS_LINUX
     mainLayout->addWidget(new QLabel(tr("<Ctrl-Q> - выход")), 0, 2, 1, 1, Qt::AlignRight);
@@ -163,11 +148,17 @@ void Window::work()
 
                 audio->audio_level(vyborFilesList[i] );
 
+                qDebug()<< "File: " << vyborFilesList[i];
+                qDebug()<< "Volume audio1: " << FileVolume1.value(vyborFilesList[i]);
+                qDebug()<< "Volume audio2: " << FileVolume2.value(vyborFilesList[i]);
+                qDebug()<< "Volume audio3: " << FileVolume3.value(vyborFilesList[i]);
+                qDebug()<< "Codec: " << FileCodec.value(vyborFilesList[i]);
             }
             pbD->hide();
         }
         if ( rb2->isChecked()){
-            bool ok; double dDb;
+            bool ok;
+            double dDb1, dDb2, dDb3, max;
             pbD3->show();
             for (int i = 0; i < vyborFilesList.size(); ++i) {
 
@@ -186,8 +177,8 @@ void Window::work()
                 if ( QFile::exists(avnFile) ) {
                     if ( !QFile::remove(avnFile)) {
                         QMessageBox::critical(this, tr("Выбран файл"), tr("<h2>Внимание!</h2>\n"
-                                                                         "Не удалось удалить старую копию файла"),
-                                             QMessageBox::Ok, QMessageBox::NoButton);
+                                                                          "Не удалось удалить старую копию файла"),
+                                              QMessageBox::Ok, QMessageBox::NoButton);
                     }
                 }
 
@@ -195,16 +186,30 @@ void Window::work()
 
                     audio->audio_level(outFile);
 
-                    dDb=FileVolume1.value(outFile).trimmed().toDouble(&ok);
+                    qDebug()<< "File: " << outFile;
+                    qDebug()<< "Volume audio1: " << FileVolume1.value(outFile);
+                    qDebug()<< "Volume audio2: " << FileVolume2.value(outFile);
+                    qDebug()<< "Volume audio3: " << FileVolume3.value(outFile);
+                    qDebug()<< "Codec: " << FileCodec.value(outFile);
+
+                    dDb1=FileVolume1.value(outFile).trimmed().toDouble(&ok);
                     if (!ok) {
                         qDebug()<< "FileVolume1.value Conversion double ERROR! Value:" << FileVolume1.value(outFile);
                         exit(1);
                     }
-                    dDb = -1 * dDb;
-                    if (dDb > 1) {
+                    dDb2=FileVolume2.value(outFile).trimmed().toDouble(&ok);
+                    if (!ok) dDb2=dDb1;
+                    dDb3=FileVolume3.value(outFile).trimmed().toDouble(&ok);
+                    if (!ok) dDb3=dDb1;
 
-                        QString strDb="volume=" + QString::number(dDb)+"dB";
+                    if ( (dDb1 < -1) && (dDb2 < -1) && (dDb3 < -1) ) {
 
+                        max = (dDb1>dDb2)? dDb1 : dDb2;
+                        max = (max >dDb3)? max  : dDb3;
+                        max = -1 * max;
+
+                        QString strDb="volume=" + QString::number(max)+"dB";
+                        qDebug()<< "Filter: " << strDb;
                         if ( QFile::rename(vyborFilesList[i], avnFile) ){
                             audio->set_audio_level(avnFile, outFile, strDb, FileCodec.value(outFile));
                         }else {
@@ -215,14 +220,30 @@ void Window::work()
                     }
                 } else {
 
-                    dDb=FileVolume1.value(outFile).trimmed().toDouble(&ok);
+                    qDebug()<< "File: " << outFile;
+                    qDebug()<< "Volume audio1: " << FileVolume1.value(outFile);
+                    qDebug()<< "Volume audio2: " << FileVolume2.value(outFile);
+                    qDebug()<< "Volume audio3: " << FileVolume3.value(outFile);
+                    qDebug()<< "Codec: " << FileCodec.value(outFile);
+
+                    dDb1=FileVolume1.value(outFile).trimmed().toDouble(&ok);
                     if (!ok) {
                         qDebug()<< "FileVolume1.value Conversion double ERROR! Value:" << FileVolume1.value(outFile);
                         exit(1);
                     }
-                    dDb = -1 * dDb;
-                    if (dDb > 1) {
-                        QString strDb="volume=" + QString::number(dDb)+"dB";
+                    dDb2=FileVolume2.value(outFile).trimmed().toDouble(&ok);
+                    if (!ok) dDb2=dDb1;
+                    dDb3=FileVolume3.value(outFile).trimmed().toDouble(&ok);
+                    if (!ok) dDb3=dDb1;
+
+                    if ( (dDb1 < -1) && (dDb2 < -1) && (dDb3 < -1) ) {
+
+                        max = (dDb1>dDb2)? dDb1 : dDb2;
+                        max = (max >dDb3)? max  : dDb3;
+                        max = -1 * max;
+
+                        QString strDb="volume=" + QString::number(max)+"dB";
+                        qDebug()<< "Filter: " << strDb;
                         if ( QFile::rename(vyborFilesList[i], avnFile) ){
                             audio->set_audio_level(avnFile, outFile, strDb, FileCodec.value(outFile) );
                         }else {
@@ -231,8 +252,6 @@ void Window::work()
                                                  QMessageBox::Ok, QMessageBox::NoButton);
                         }
                     }
-
-
                 }
             }
             pbD3->hide();

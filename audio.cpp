@@ -136,7 +136,7 @@ void Audio::audio_level(QString fileName )
         while(process->canReadLine()){
             QString line = QString(process->readLine() );
 
-            qDebug()<< "Line from ffmpeg:" << line;
+//            qDebug()<< "Line from ffmpeg:" << line;
 
             if ( line.contains("time=") ){
                 int tt=line.indexOf("bit",0)-(line.indexOf("time",0)+5) ;
