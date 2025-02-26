@@ -12,6 +12,7 @@
 #include <QProcessEnvironment>
 #include <QCoreApplication>
 #include <QMessageBox>
+#include <QRegExp>
 
 class Audio : public QObject
 {
@@ -40,7 +41,9 @@ public slots:
 signals:
     void set_pD(int);
     void set_pS(int);
-    void send_max_vol(QString,QString);
+    void send_max_vol1(QString,QString);
+    void send_max_vol2(QString,QString);
+    void send_max_vol3(QString,QString);
     void send_codec(QString,QString);
 
 protected:
@@ -50,6 +53,7 @@ protected:
 
 private:
     bool stop;
+    int numA;
 
 };
 

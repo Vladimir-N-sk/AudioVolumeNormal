@@ -117,7 +117,9 @@ Window::Window(QWidget *parent)
     mainLayout->addWidget(gb, 4, 0, 1, 2);
 
     audio = new Audio();
-    connect(audio,&Audio::send_max_vol, this, &Window::recv_max_vol );
+    connect(audio,&Audio::send_max_vol1, this, &Window::recv_max_vol1 );
+    connect(audio,&Audio::send_max_vol2, this, &Window::recv_max_vol2 );
+    connect(audio,&Audio::send_max_vol3, this, &Window::recv_max_vol3 );
     connect(audio,&Audio::send_codec, this, &Window::recv_codec );
 
     pbD = new pbDialog();
@@ -189,13 +191,13 @@ void Window::work()
                     }
                 }
 
-                if ( FileVolume.value(outFile) == "-.-" ) {
+                if ( FileVolume1.value(outFile) == "-.-" ) {
 
                     audio->audio_level(outFile);
 
-                    dDb=FileVolume.value(outFile).trimmed().toDouble(&ok);
+                    dDb=FileVolume1.value(outFile).trimmed().toDouble(&ok);
                     if (!ok) {
-                        qDebug()<< "FileVolume.value Conversion double ERROR! Value:" << FileVolume.value(outFile);
+                        qDebug()<< "FileVolume1.value Conversion double ERROR! Value:" << FileVolume1.value(outFile);
                         exit(1);
                     }
                     dDb = -1 * dDb;
@@ -213,9 +215,9 @@ void Window::work()
                     }
                 } else {
 
-                    dDb=FileVolume.value(outFile).trimmed().toDouble(&ok);
+                    dDb=FileVolume1.value(outFile).trimmed().toDouble(&ok);
                     if (!ok) {
-                        qDebug()<< "FileVolume.value Conversion double ERROR! Value:" << FileVolume.value(outFile);
+                        qDebug()<< "FileVolume1.value Conversion double ERROR! Value:" << FileVolume1.value(outFile);
                         exit(1);
                     }
                     dDb = -1 * dDb;
@@ -292,11 +294,15 @@ void Window::find()
 void Window::createMapFiles(const QStringList &findFileNames)
 {
     FileSize.clear();
-    FileVolume.clear();
+    FileVolume1.clear();
+    FileVolume2.clear();
+    FileVolume3.clear();
     FileCodec.clear();
     for (const QString &filePathName : findFileNames) {
         FileSize.insert(filePathName, QFileInfo(filePathName).size());
-        FileVolume.insert(filePathName, "-.-");
+        FileVolume1.insert(filePathName, "-.-");
+        FileVolume2.insert(filePathName, "-.-");
+        FileVolume3.insert(filePathName, "-.-");
         FileCodec.insert(filePathName, "---");
     }
 }
@@ -309,7 +315,9 @@ void Window::showMapFiles()
     for (int i = rt ; i >= 0; i--) filesTable->removeRow(i);
 
     QMapIterator<QString, qint64> fs(FileSize);
-    QMapIterator<QString, QString> fv(FileVolume);
+    QMapIterator<QString, QString> fv1(FileVolume1);
+    QMapIterator<QString, QString> fv2(FileVolume2);
+    QMapIterator<QString, QString> fv3(FileVolume3);
     QMapIterator<QString, QString> fc(FileCodec);
 
     while (fs.hasNext()) {
@@ -330,11 +338,23 @@ void Window::showMapFiles()
         sizeItem->setTextAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
         sizeItem->setFlags(sizeItem->flags() ^ Qt::ItemIsEditable);
 
-        QTableWidgetItem *volumeItem = new QTableWidgetItem( FileVolume[fs.key()] );
-        volumeItem->setData(absoluteFileNameRole, QVariant(fs.key()));
-        volumeItem->setToolTip(toolTip);
-        volumeItem->setTextAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
-        volumeItem->setFlags(volumeItem->flags() ^ Qt::ItemIsEditable);
+        QTableWidgetItem *volumeItem1 = new QTableWidgetItem( FileVolume1[fs.key()] );
+        volumeItem1->setData(absoluteFileNameRole, QVariant(fs.key()));
+        volumeItem1->setToolTip(toolTip);
+        volumeItem1->setTextAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
+        volumeItem1->setFlags(volumeItem1->flags() ^ Qt::ItemIsEditable);
+
+        QTableWidgetItem *volumeItem2 = new QTableWidgetItem( FileVolume2[fs.key()] );
+        volumeItem2->setData(absoluteFileNameRole, QVariant(fs.key()));
+        volumeItem2->setToolTip(toolTip);
+        volumeItem2->setTextAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
+        volumeItem2->setFlags(volumeItem2->flags() ^ Qt::ItemIsEditable);
+
+        QTableWidgetItem *volumeItem3 = new QTableWidgetItem( FileVolume3[fs.key()] );
+        volumeItem3->setData(absoluteFileNameRole, QVariant(fs.key()));
+        volumeItem3->setToolTip(toolTip);
+        volumeItem3->setTextAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
+        volumeItem3->setFlags(volumeItem3->flags() ^ Qt::ItemIsEditable);
 
         QTableWidgetItem *codecItem = new QTableWidgetItem( FileCodec[fs.key()] );
         codecItem->setData(absoluteFileNameRole, QVariant(fs.key()));
@@ -346,8 +366,10 @@ void Window::showMapFiles()
         filesTable->insertRow(row);
         filesTable->setItem(row, 0, fileNameItem);
         filesTable->setItem(row, 1, sizeItem);
-        filesTable->setItem(row, 2, volumeItem);
-        filesTable->setItem(row, 3, codecItem);
+        filesTable->setItem(row, 2, volumeItem1);
+        filesTable->setItem(row, 3, volumeItem2);
+        filesTable->setItem(row, 4, volumeItem3);
+        filesTable->setItem(row, 5, codecItem);
     }
 //    filesFoundLabel->setText(tr("Найдено %n медиа файлов", nullptr, FileSize.size() ));
 //    filesFoundLabel->setWordWrap(true);
@@ -364,11 +386,11 @@ QComboBox *Window::createComboBox(const QString &text)
 
 void Window::createFilesTable()
 {
-    filesTable = new QTableWidget(0, 4);
+    filesTable = new QTableWidget(0, 6);
     filesTable->setSelectionBehavior(QAbstractItemView::SelectRows);
 
     QStringList labels;
-    labels << tr("Filename") << tr("Size")<< tr("Volume (dB)")<< tr("Codec");
+    labels << tr("Filename") << tr("Size")<< tr("Vol 1")<< tr("Vol 2")<< tr("Vol 3")<< tr("Codec");
     filesTable->setHorizontalHeaderLabels(labels);
     filesTable->horizontalHeader()->setSectionResizeMode(0, QHeaderView::Stretch);
     filesTable->verticalHeader()->hide();
@@ -465,7 +487,9 @@ void Window::browse()
             directoryComboBox->addItem(directory);
         directoryComboBox->setCurrentIndex(directoryComboBox->findText(directory));
         FileSize.clear();
-        FileVolume.clear();
+        FileVolume1.clear();
+        FileVolume2.clear();
+        FileVolume3.clear();
         FileCodec.clear();
         workButton->hide();
         sb->showMessage(tr("Для начала работы нажмите <Найти файлы>"));
@@ -474,8 +498,14 @@ void Window::browse()
 }
 
 
-void Window::recv_max_vol(QString fName, QString strMVol){
-    FileVolume.insert(fName, strMVol);
+void Window::recv_max_vol1(QString fName, QString strMVol){
+    FileVolume1.insert(fName, strMVol);
+}
+void Window::recv_max_vol2(QString fName, QString strMVol){
+    FileVolume2.insert(fName, strMVol);
+}
+void Window::recv_max_vol3(QString fName, QString strMVol){
+    FileVolume3.insert(fName, strMVol);
 }
 
 void Window::recv_codec(QString fName, QString strCodec){
