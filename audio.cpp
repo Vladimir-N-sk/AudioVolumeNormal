@@ -21,30 +21,38 @@ void Audio::set_audio_level(QString fileNameIn, QString fileNameOut, QString str
         env.insert("LD_LIBRARY_PATH", dirFFmpeg); // Add an environment variable
         process->setProcessEnvironment(env);
 
-        process->start( (dirFFmpeg+"/libffmpeg"), QStringList()
-                        << "-y"
-                        << "-hide_banner"
+        process->start( (dirFFmpeg+"/libffmpeg"), QStringList() << "-y" << "-hide_banner"
                         << "-i" << fileNameIn
+                        <<"-map"<< "0:v"<< "-c:v"<< "copy"<< "-map"<< "0:a:0"<< "-c:a"<< codec
+                        <<"-map"<< "0:a:1?"<< "-c:a"<< codec<< "-map"<< "0:a:2?"<< "-c:a"<< codec
                         <<"-af" << strDb
                         <<"-c:s"<< "copy"<<"-c:v"<< "copy"
-                        << "-c:a"<< codec
                         <<"-strict"<< "experimental"
                         <<fileNameOut
                         );
 
         if( !process->waitForStarted(1000) ) {
-            qDebug() <<"ERROR START SET_AUDIO_LEVEL args: "<<(dirFFmpeg+"/libffmpeg") << " -hide_banner "<< " -i " << fileNameIn<<" -af "
-                    << strDb<<" -c:s "<< " copy " <<" -c:v "<< " copy "<< " -c:a "<< codec<<" -strict experimental "<<fileNameOut;
+            qDebug() <<"ERROR START SET_AUDIO_LEVEL args: "<<(dirFFmpeg+"/libffmpeg")
+                    << "-y"<< "-hide_banner" << "-i" << fileNameIn <<"-map"<< "0:v"<< "-c:v"<< "copy"<< "-map"<< "0:a:0"<< "-c:a"<< codec
+                    <<"-map"<< "0:a:1?"<< "-c:a"<< codec<< "-map"<< "0:a:2?"<< "-c:a"<< codec
+                    <<"-af" << strDb <<"-c:s"<< "copy"<<"-c:v"<< "copy" <<"-strict"<< "experimental"<<fileNameOut;
             return;
         }
 
-        qDebug() <<"START SET_AUDIO_LEVEL args: "  << (dirFFmpeg+"/libffmpeg")  << " -hide_banner "<< " -i " << fileNameIn<<" -af "
-                << strDb<<" -c:s "<< " copy "  <<" -c:v "<< " copy "<< " -c:a "<< codec<<" -strict experimental "<<fileNameOut;
+        qDebug() <<"START SET_AUDIO_LEVEL args: "  << (dirFFmpeg+"/libffmpeg")
+                << "-y"<< "-hide_banner" << "-i" << fileNameIn <<"-map"<< "0:v"<< "-c:v"<< "copy"<< "-map"<< "0:a:0"<< "-c:a"<< codec
+                <<"-map"<< "0:a:1?"<< "-c:a"<< codec<< "-map"<< "0:a:2?"<< "-c:a"<< codec
+                <<"-af" << strDb <<"-c:s"<< "copy"<<"-c:v"<< "copy" <<"-strict"<< "experimental"<<fileNameOut;
 
         emit set_pS(msecFrameTime*100/msecDurTime);
 
         while (process->waitForReadyRead(-1)) {
-            if (stop) break;
+//            if (stop) break;
+            if (stop) {
+                process->close();
+                delete process;
+                return;
+            }
             while(process->canReadLine()){
 
                 QString line = QString(process->readLine() );
@@ -82,7 +90,6 @@ void Audio::set_audio_level(QString fileNameIn, QString fileNameOut, QString str
 void Audio::audio_level(QString fileName )
 {
 
-//    qDebug() <<"*** Start AUDIO_LEVEL";
     int msecDurTime=1, msecFrameTime=0, streamAudio=0;
     stop = false;
 
@@ -96,15 +103,6 @@ void Audio::audio_level(QString fileName )
     QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
     env.insert("LD_LIBRARY_PATH", dirFFmpeg); // Add an environment variable
     process->setProcessEnvironment(env);
-
-//    ffmpeg -i *.mkv -map 0:a:0 -map 0:a:1? -map 0:a:2? -af "volumedetect"  -vn -sn -dn -f null  /dev/null
-
-
-// old good
-//    process->start( (dirFFmpeg+"/libffmpeg"), QStringList()
-//                    << "-hide_banner" << "-i" << fileName <<"-af" << filter_vol_detect
-//                    <<"-vn"<< "-sn"<< "-dn"<<"-f" << "null" << "/dev/null");
-
 
         process->start( (dirFFmpeg+"/libffmpeg"), QStringList()
                         << "-hide_banner" << "-i" << fileName
@@ -132,8 +130,15 @@ void Audio::audio_level(QString fileName )
     numA=1;
     QCoreApplication::processEvents();
     while (process->waitForReadyRead(-1)) {
-        if (stop) break;
+//        if (stop) break;
+        if (stop) {
+            qDebug()<< "!!! Resv signal STOP Process !!!" ;
+            process->close();
+            delete process;
+            return;
+        }
         while(process->canReadLine()){
+
             QString line = QString(process->readLine() );
 
 //            qDebug()<< "Line from ffmpeg:" << line;

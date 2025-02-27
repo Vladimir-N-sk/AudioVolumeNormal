@@ -68,6 +68,7 @@ void recv_max_vol1(QString, QString);
 void recv_max_vol2(QString, QString);
 void recv_max_vol3(QString, QString);
 void recv_codec(QString, QString);
+void recv_stop();
 
 private slots:
     void browse();
@@ -90,7 +91,6 @@ private:
     QString vyborFile, sb1;
     QStatusBar *sb;
 
-//    void showFiles(const QStringList &paths);
     void showMapFiles();
     void createMapFiles(const QStringList &findFileNames);
     QComboBox *createComboBox(const QString &text = QString());
@@ -109,10 +109,7 @@ private:
     QRadioButton *rb3;   // переключателя.
     QDir currentDir;
 
-//    void audio_level(const char* fileName);
-//    void logging(const char *fmt, ...);
-
-
+    bool stop;
 };
 
 #endif

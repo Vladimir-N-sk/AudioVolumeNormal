@@ -24,7 +24,7 @@ audio.cpp \
 #LIBS += -L/media/sdb2/ffmpeg_new/lib    // задается в настройках QtCreator
 #LIBS += -lpostproc -lavformat  -lavcodec -lavutil -lavfilter -lswscale -lavdevice -lswresample -lx264 -lx265
 
-QMAKE_CXXFLAGS_WARN_ON += -Wno-unused
+QMAKE_CXXFLAGS_WARN_ON += -Wno-unused -Wimplicit-fallthrough
 
 FORMS += \
     pbdialog.ui \

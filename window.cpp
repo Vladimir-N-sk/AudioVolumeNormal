@@ -112,6 +112,8 @@ Window::Window(QWidget *parent)
     connect(this,&Window::send_file_name, pbD, &pbDialog::on_lbAudio_setText );
     connect(this,&Window::send_file_percent, pbD, &pbDialog::on_pBarAll_valueChanged );
     connect(this,&Window::send_file_count, pbD, &pbDialog::on_lbAll_setText );
+    connect(pbD,&pbDialog::rejected, audio, &Audio::recv_cancel_pD );
+    connect(pbD,&pbDialog::rejected, this, &Window::recv_stop );
 
     pbD3 = new pbDialog3();
     connect(audio,&Audio::set_pS, pbD3, &pbDialog3::on_pBarChange_valueChanged );
@@ -120,6 +122,8 @@ Window::Window(QWidget *parent)
     connect(this,&Window::send_file_name, pbD3, &pbDialog3::on_lbAudio_setText );
     connect(this,&Window::send_file_percent, pbD3, &pbDialog3::on_pBarAll_valueChanged );
     connect(this,&Window::send_file_count, pbD3, &pbDialog3::on_lbAll_setText );
+    connect(pbD3,&pbDialog3::rejected, audio, &Audio::recv_cancel_pD );
+    connect(pbD3,&pbDialog::rejected, this, &Window::recv_stop );
 
     sb->showMessage(tr("Для начала работы нажмите <Найти файлы>"));
 }
@@ -134,15 +138,31 @@ void Window::work()
                                     "Ни один файл не выбран."),
                                  QMessageBox::Ok, QMessageBox::NoButton);
     } else {
-        sb->showMessage(QString("Выбрано ")+ (QString::number(vyborFilesList.size())) + QString(" файл(ов)."));
+
+
+        QString fff="";
+        switch (vyborFilesList.size()) {
+        case 1: fff = "Выбран 1 файл.";
+        case 2:
+        case 3:
+        case 4:
+            fff = "Выбрано " + (QString::number(vyborFilesList.size())) + " файла.";
+            break;
+        default:
+            fff = "Выбрано " + (QString::number(vyborFilesList.size())) + " файлов.";
+            break;
+        }
+        sb->showMessage(fff);
+
         if ( rb1->isChecked()) {
+            stop = false;
             pbD->show();
             for (int i = 0; i < vyborFilesList.size(); ++i) {
-
-//                emit send_file_name(vyborFilesList[i]);
-
+                if (stop) {
+                    sb->showMessage(tr("Процесс прерван."));
+                    break;
+                }
                 emit send_file_name( QFileInfo(vyborFilesList[i]).fileName() );
-
                 emit send_file_percent(i*100/vyborFilesList.size());
                 emit send_file_count(QString::number(i));
 
@@ -159,8 +179,15 @@ void Window::work()
         if ( rb2->isChecked()){
             bool ok;
             double dDb1, dDb2, dDb3, max;
+            stop = false;
+
             pbD3->show();
             for (int i = 0; i < vyborFilesList.size(); ++i) {
+
+                if (stop) {
+                    sb->showMessage(tr("Процесс прерван."));
+                    break;
+                }
 
                 // Посылаем на форму имя обрабатываемого файла
                 emit send_file_name( QFileInfo(vyborFilesList[i]).fileName() );
@@ -185,6 +212,10 @@ void Window::work()
                 if ( FileVolume1.value(outFile) == "-.-" ) {
 
                     audio->audio_level(outFile);
+                    if (stop) {
+                        sb->showMessage(tr("Процесс прерван."));
+                        break;
+                    }
 
                     qDebug()<< "File: " << outFile;
                     qDebug()<< "Volume audio1: " << FileVolume1.value(outFile);
@@ -294,8 +325,20 @@ void Window::find()
         createMapFiles(findFilesList);
         showMapFiles();
         workButton->setVisible(true);
-       sb->showMessage(QString("Найдено ")+ (QString::number(findFilesList.size())) + QString(" файлов. ")
-                       + QString("Выбираем файлы, <Задание> и <Начать>"));
+
+        QString fff="";
+        switch (findFilesList.size()) {
+        case 1: fff = "Найден 1 файл.";
+        case 2:
+        case 3:
+        case 4:
+            fff = "Найдено " + (QString::number(findFilesList.size())) + " файла.";
+            break;
+        default:
+            fff = "Найдено " + (QString::number(findFilesList.size())) + " файлов.";
+            break;
+        }
+        sb->showMessage(fff + QString(" Выбираем файлы, <Задание> и <Начать>"));
     } else {
         workButton->hide();
         rb1->setDisabled(true);
@@ -441,12 +484,11 @@ void Window::work_list()
     listItem = filesTable->selectedItems();
 
     if (!listItem.isEmpty()) {
-    Q_ASSERT(listItem.count() % 3== 0);
+    Q_ASSERT(listItem.count() % 6 == 0);
         // прыгаем через 3 элемента
         vyborFilesList.clear();
-        for (int i=0; i<listItem.size() ;i+=3) {
+        for (int i=0; i<listItem.size() ;i+=6) {
             vyborFile =listItem.at(i)->data(absoluteFileNameRole).toString();
-//            qDebug()<<"I:"<< i <<"***File from listItem:"<<vyborFile;
             vyborFilesList << vyborFile;
         }
         work();
@@ -516,7 +558,6 @@ void Window::browse()
     }
 }
 
-
 void Window::recv_max_vol1(QString fName, QString strMVol){
     FileVolume1.insert(fName, strMVol);
 }
@@ -529,4 +570,8 @@ void Window::recv_max_vol3(QString fName, QString strMVol){
 
 void Window::recv_codec(QString fName, QString strCodec){
     FileCodec.insert(fName, strCodec);
+}
+
+void Window::recv_stop(){
+    stop = true;
 }
