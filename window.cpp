@@ -84,9 +84,11 @@ Window::Window(QWidget *parent)
     gb = new QGroupBox(tr("Задание"));
     gb->setAlignment(Qt::AlignHCenter);
 
-    gb->setStyleSheet("color: black;" "background-color: #70D4E5;" );
+//    gb->setStyleSheet("color: black;" "background-color: #70D4E5;" );
 //    gb->setStyleSheet("color: black;" "background-color: #D6D2D0;" );
-//    gb->setStyleSheet("color: white;" "background-color: #B6B6B6;" );
+
+    //фон светло-серый
+        gb->setStyleSheet("color: black;" "background-color: #B6B6B6;" );
 
     rb1 = new QRadioButton(tr("Узнать уровень аудио"), gb);
     rb2 = new QRadioButton(tr("Поменять уровень аудио"), gb);
@@ -348,7 +350,7 @@ void Window::find()
         QMessageBox::information(this, tr("Поиск фалов"),
                                  tr("<h2>Внимание!</h2>\n"
                                     "<p>В выбранной папке"
-                                    "<p>ни один медиа-файл не найден."),
+                                    "<p>ни один медиафайл не найден."),
                                  QMessageBox::Ok, QMessageBox::NoButton);
     }
 }
@@ -433,7 +435,7 @@ void Window::showMapFiles()
         filesTable->setItem(row, 4, volumeItem3);
         filesTable->setItem(row, 5, codecItem);
     }
-//    filesFoundLabel->setText(tr("Найдено %n медиа файлов", nullptr, FileSize.size() ));
+//    filesFoundLabel->setText(tr("Найдено %n медиафайлов", nullptr, FileSize.size() ));
 //    filesFoundLabel->setWordWrap(true);
 }
 

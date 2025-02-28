@@ -126,11 +126,11 @@ void Audio::audio_level(QString fileName )
             <<" -af " << filter_vol_detect
             <<" -vn "<< " -sn "<< " -dn "<<" -f " << " null " << " /dev/null";
 
+    emit set_pS(0);
     emit set_pD(msecFrameTime*100/msecDurTime);
     numA=1;
     QCoreApplication::processEvents();
     while (process->waitForReadyRead(-1)) {
-//        if (stop) break;
         if (stop) {
             qDebug()<< "!!! Resv signal STOP Process !!!" ;
             process->close();

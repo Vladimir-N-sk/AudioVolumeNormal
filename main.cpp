@@ -4,33 +4,6 @@
 
 #include "window.h"
 
-//void customMessageOutput(QtMsgType type, const QMessageLogContext &context, const QString &msg)
-//{
-//    QHash<QtMsgType, QString> msgLevelHash({{QtDebugMsg, "Debug"}, {QtInfoMsg, "Info"}, {QtWarningMsg, "Warning"}, {QtCriticalMsg, "Critical"}, {QtFatalMsg, "Fatal"}});
-//    QByteArray localMsg = msg.toLocal8Bit();
-//    QTime time = QTime::currentTime();
-//    QString formattedTime = time.toString("hh:mm:ss.zzz");
-//    QByteArray formattedTimeMsg = formattedTime.toLocal8Bit();
-//    QString logLevelName = msgLevelHash[type];
-//    QByteArray logLevelMsg = logLevelName.toLocal8Bit();
-
-//    if (logToFile) {
-//        QString txt = QString("%1 %2: %3 (%4)").arg(formattedTime, logLevelName, msg,  context.file);
-//        QFile outFile(logFilePath);
-//        outFile.open(QIODevice::WriteOnly | QIODevice::Append);
-//        QTextStream ts(&outFile);
-//        ts << txt << Qt::endl;
-//        outFile.close();
-//    } else {
-//        fprintf(stderr, "%s %s: %s (%s:%u, %s)\n", formattedTimeMsg.constData(), logLevelMsg.constData(), localMsg.constData(), context.file, context.line, context.function);
-//        fflush(stderr);
-//    }
-
-//    if (type == QtFatalMsg)
-//        abort();
-//}
-
-
 static QTextStream output_ts;
 
 void myMessageHandler(QtMsgType type, const QMessageLogContext &context, const QString& msg)
@@ -63,9 +36,8 @@ int main(int argc, char *argv[])
 
     QApplication app(argc, argv);
 
-    qDebug() << "See log file avn.log";
-
     QString logfilePath = QCoreApplication::applicationDirPath()+"/avn.log";
+    qDebug() << "See log file " + logfilePath;
     QFile outFile(logfilePath);
     outFile.open(QIODevice::WriteOnly | QIODevice::Truncate);
     output_ts.setDevice(&outFile);
