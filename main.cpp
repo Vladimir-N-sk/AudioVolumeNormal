@@ -36,6 +36,8 @@ int main(int argc, char *argv[])
 
     QApplication app(argc, argv);
 
+    QFont f = app.font();
+
     QString logfilePath = QCoreApplication::applicationDirPath()+"/AVN.log";
     qDebug() << "See log file " + logfilePath;
     QFile outFile(logfilePath);
@@ -45,10 +47,15 @@ int main(int argc, char *argv[])
 
     qDebug() << "Audio Volume Normal start";
     qDebug() << "SysInfo: "<< QSysInfo::prettyProductName() << " " << QSysInfo::currentCpuArchitecture();
+    qDebug() << "Default font size:"<<f.pointSize();
+    qDebug() << "Set font size 12";
+
+    f.setPointSize(12);
+    app.setFont(f);
 
     QCoreApplication::setOrganizationName("Vladimir-N-sk");
     QCoreApplication::setApplicationName("Audio Volume Normal");
-    QCoreApplication::setApplicationVersion("1.1");
+    QCoreApplication::setApplicationVersion("1.3");
     QCoreApplication::setOrganizationDomain("alvladnik@gmail.com");
     Window AudioWin;
 
