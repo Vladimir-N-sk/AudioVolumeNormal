@@ -16,13 +16,13 @@ public:
     ~pbDialog3();
 
 public slots:
-    void on_pBarAll_valueChanged(int value);
-    void on_pBarAudio_valueChanged(int value);
-    void on_pBarChange_valueChanged(int value);
+    void pBarAll_valueChanged(int value);
+    void pBarAudio_valueChanged(int value);
+    void pBarChange_valueChanged(int value);
 
-    void on_lbAudio_setText(QString txt);
-    void on_lbAll_setText(QString num);
-    void on_lbChange_setText(QString txt);
+    void lbAudio_setText(QString txt);
+    void lbAll_setText(QString num);
+    void lbChange_setText(QString txt);
 
 private:
     Ui::pbDialog3 *ui;

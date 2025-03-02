@@ -36,7 +36,7 @@ int main(int argc, char *argv[])
 
     QApplication app(argc, argv);
 
-    QString logfilePath = QCoreApplication::applicationDirPath()+"/avn.log";
+    QString logfilePath = QCoreApplication::applicationDirPath()+"/AVN.log";
     qDebug() << "See log file " + logfilePath;
     QFile outFile(logfilePath);
     outFile.open(QIODevice::WriteOnly | QIODevice::Truncate);

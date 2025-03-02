@@ -13,6 +13,12 @@ void Audio::set_audio_level(QString fileNameIn, QString fileNameOut, QString str
     emit set_pS(0);
 
         QString dirFFmpeg = QCoreApplication::applicationDirPath()+"/lib";
+
+        if ( !QFile(dirFFmpeg+"/libffmpeg").exists() ) {
+                qDebug() << "Not found file lib/libffmpeg" ;
+                exit(1);
+        }
+
         QProcess *process = new QProcess(parent());
         process->setProcessChannelMode(QProcess::MergedChannels);
         connect(process, &QProcess::errorOccurred, this, &Audio::log_prog );
@@ -94,6 +100,11 @@ void Audio::audio_level(QString fileName )
     stop = false;
 
     QString dirFFmpeg = QCoreApplication::applicationDirPath()+"/lib";
+
+    if ( !QFile(dirFFmpeg+"/libffmpeg").exists() ) {
+            qDebug() << "Not found file lib/libffmpeg" ;
+            exit(1);
+    }
 
     QProcess *process = new QProcess(parent());
     process->setProcessChannelMode(QProcess::MergedChannels);

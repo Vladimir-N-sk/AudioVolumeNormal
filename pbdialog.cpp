@@ -13,22 +13,22 @@ pbDialog::~pbDialog()
     delete ui;
 }
 
-void pbDialog::on_pBarAll_valueChanged(int value)
+void pbDialog::pBarAll_valueChanged(int value)
 {
     ui->pBarAll->setValue(value);
 }
 
-void pbDialog::on_pBarAudio_valueChanged(int value)
+void pbDialog::pBarAudio_valueChanged(int value)
 {
     ui->pBarAudio->setValue(value);
 }
 
-void pbDialog::on_lbAudio_setText(QString txt)
+void pbDialog::lbAudio_setText(QString txt)
 {
     ui->lbAudio->setText(QString(tr("в файле: "))+txt );
 }
 
-void pbDialog::on_lbAll_setText(QString num)
+void pbDialog::lbAll_setText(QString num)
 {
     ui->lbAll->setText(QString(tr("Обработано файлов: "))+num );
 }
