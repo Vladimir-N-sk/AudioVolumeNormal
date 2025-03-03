@@ -201,17 +201,19 @@ void Window::work()
                 emit send_file_count(QString::number(i));
 
                 QString inFile = vyborFilesList[i];
-                //                QString avnFile = inFile + ".avn";
 
                 QString avnFile = QFileInfo(inFile).canonicalPath() +
-        #ifdef Q_OS_LINUX
-                        "/AVN_"
-        #elif defined(Q_OS_WIN)
-                        "\AVN_"
-        #else
-                        qDebug() << "We don't support that version OS";
-         #endif
-                + QFileInfo(inFile).fileName();
+                        "/AVN_" + QFileInfo(inFile).fileName();
+
+                QFile testFile(avnFile);
+                if (  !(testFile.open(QIODevice::WriteOnly | QIODevice::Truncate)) ) {
+                    qDebug()<< "Not open output file: " << avnFile;
+                    QMessageBox::critical(this, tr("Предупреждение"), tr("<h2>Внимание</h2>\n"
+                                                           "Что-то пошло не так!\n"
+                                                           "Не удалось создать тестовый файл."),
+                                          QMessageBox::Ok, QMessageBox::NoButton);
+                }
+                testFile.close();
 
                 if ( QFile::exists(avnFile) ) {
                     sb->showMessage(tr("Удаляем старую копию ")+avnFile );
