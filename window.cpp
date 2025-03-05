@@ -226,6 +226,7 @@ void Window::work()
 
                 if ( FileVolume1.value(inFile) == "-.-" ) {
 
+                    sb->showMessage(tr("Находим текущий уровень аудио в файле: ")+avnFile );
                     audio->audio_level(inFile);
                     if (stop) {
                         sb->showMessage(tr("Процесс прерван."));
@@ -257,15 +258,24 @@ void Window::work()
                         QString strDb="volume=" + QString::number(max)+"dB";
                         qDebug()<< "Filter: " << strDb;
 
-//                        if ( QFile::rename(vyborFilesList[i], avnFile) ){
+                        QStringList list_args;
+                        list_args<< "-y" << "-hide_banner"
+                                 << "-i" << inFile
+                                 <<"-map"<< "0:v"<< "-c:v"<< "copy"
+                                 << "-map"<< "0:a:0"<< "-c:a"<< FileCodec.value(inFile)
+                                 <<"-map"<< "0:a:1?"<< "-c:a"<< FileCodec.value(inFile)
+                                 << "-map"<< "0:a:2?"<< "-c:a"<< FileCodec.value(inFile)
+                                 <<"-af" << strDb
+                                 <<"-c:s"<< "copy"<<"-c:v"<< "copy"
+                                 <<"-strict"<< "experimental"
+                                 <<avnFile;
 
-                            audio->set_audio_level( inFile, avnFile, strDb, FileCodec.value(inFile));
+                        sb->showMessage(tr("Изменяем уровень аудио в файле: ")+avnFile );
 
-//                        }else {
-//                            QMessageBox::critical(this, tr("Выбран файл"), tr("<h2>Внимание!</h2>\n"
-//                                                                              "Не удалось создать копию файла"),
-//                                                  QMessageBox::Ok, QMessageBox::NoButton);
-//                        }
+                        //                            audio->set_audio_level( inFile, avnFile, strDb, FileCodec.value(inFile));
+                        //                            audio->set_audio_level( inFile, avnFile, strDb, codec);
+
+                        audio->set_audio_level( list_args );
 
                     }
                 } else {
@@ -294,13 +304,23 @@ void Window::work()
 
                         QString strDb="volume=" + QString::number(max)+"dB";
                         qDebug()<< "Filter: " << strDb;
-//                        if ( QFile::rename(vyborFilesList[i], avnFile) ){
-                            audio->set_audio_level(inFile, avnFile, strDb, FileCodec.value(inFile) );
-//                        }else {
-//                            QMessageBox::warning(this, tr("Выбран файл"), tr("<h2>Внимание!</h2>\n"
-//                                                                             "Не удалось создать копию файла"),
-//                                                 QMessageBox::Ok, QMessageBox::NoButton);
-//                        }
+
+                        QStringList list_args;
+                        list_args<< "-y" << "-hide_banner"
+                                 << "-i" << inFile
+                                 <<"-map"<< "0:v"<< "-c:v"<< "copy"
+                                << "-map"<< "0:a:0"<< "-c:a"<< FileCodec.value(inFile)
+                                <<"-map"<< "0:a:1?"<< "-c:a"<< FileCodec.value(inFile)
+                               << "-map"<< "0:a:2?"<< "-c:a"<< FileCodec.value(inFile)
+                               <<"-af" << strDb
+                              <<"-c:s"<< "copy"<<"-c:v"<< "copy"
+                             <<"-strict"<< "experimental"
+                            <<avnFile;
+
+                        sb->showMessage(tr("Изменяем уровень аудио в файле: ")+avnFile );
+
+                        //                            audio->set_audio_level(inFile, avnFile, strDb, FileCodec.value(inFile) );
+                        audio->set_audio_level( list_args );
                     }
                 }
                 sb->showMessage(tr("Уровень аудио в файле ")+
@@ -398,10 +418,10 @@ void Window::showMapFiles()
     for (int i = rt ; i >= 0; i--) filesTable->removeRow(i);
 
     QMapIterator<QString, qint64> fs(FileSize);
-    QMapIterator<QString, QString> fv1(FileVolume1);
-    QMapIterator<QString, QString> fv2(FileVolume2);
-    QMapIterator<QString, QString> fv3(FileVolume3);
-    QMapIterator<QString, QString> fc(FileCodec);
+//    QMapIterator<QString, QString> fv1(FileVolume1);
+//    QMapIterator<QString, QString> fv2(FileVolume2);
+//    QMapIterator<QString, QString> fv3(FileVolume3);
+//    QMapIterator<QString, QString> fc(FileCodec);
 
     while (fs.hasNext()) {
         fs.next();
@@ -421,41 +441,64 @@ void Window::showMapFiles()
         sizeItem->setTextAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
         sizeItem->setFlags(sizeItem->flags() ^ Qt::ItemIsEditable);
 
-        QTableWidgetItem *volumeItem1 = new QTableWidgetItem( FileVolume1[fs.key()] );
-        volumeItem1->setData(absoluteFileNameRole, QVariant(fs.key()));
-        volumeItem1->setToolTip(toolTip);
-        volumeItem1->setTextAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
-        volumeItem1->setFlags(volumeItem1->flags() ^ Qt::ItemIsEditable);
-
-        QTableWidgetItem *volumeItem2 = new QTableWidgetItem( FileVolume2[fs.key()] );
-        volumeItem2->setData(absoluteFileNameRole, QVariant(fs.key()));
-        volumeItem2->setToolTip(toolTip);
-        volumeItem2->setTextAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
-        volumeItem2->setFlags(volumeItem2->flags() ^ Qt::ItemIsEditable);
-
-        QTableWidgetItem *volumeItem3 = new QTableWidgetItem( FileVolume3[fs.key()] );
-        volumeItem3->setData(absoluteFileNameRole, QVariant(fs.key()));
-        volumeItem3->setToolTip(toolTip);
-        volumeItem3->setTextAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
-        volumeItem3->setFlags(volumeItem3->flags() ^ Qt::ItemIsEditable);
-
         QTableWidgetItem *codecItem = new QTableWidgetItem( FileCodec[fs.key()] );
         codecItem->setData(absoluteFileNameRole, QVariant(fs.key()));
         codecItem->setToolTip(toolTip);
         codecItem->setTextAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
         codecItem->setFlags(codecItem->flags() ^ Qt::ItemIsEditable);
 
+        QTableWidgetItem *volumeItem1 = new QTableWidgetItem( FileVolume1[fs.key()] );
+//        volumeItem1->setData(absoluteFileNameRole, QVariant(fs.key()));
+        volumeItem1->setToolTip(toolTip);
+        volumeItem1->setTextAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
+        volumeItem1->setFlags(volumeItem1->flags() ^ Qt::ItemIsEditable);
+
+        QTableWidgetItem *checkItem1 = new QTableWidgetItem( Qt::CheckStateRole );
+        if ( FileVolume1[fs.key()] == "-.-" ) {
+            checkItem1->setCheckState(Qt::Unchecked);
+        } else {
+            checkItem1->setCheckState(Qt::Checked);
+        }
+
+
+        QTableWidgetItem *volumeItem2 = new QTableWidgetItem( FileVolume2[fs.key()] );
+//        volumeItem2->setData(absoluteFileNameRole, QVariant(fs.key()));
+        volumeItem2->setToolTip(toolTip);
+        volumeItem2->setTextAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
+        volumeItem2->setFlags(volumeItem2->flags() ^ Qt::ItemIsEditable);
+
+        QTableWidgetItem *checkItem2 = new QTableWidgetItem( Qt::CheckStateRole );
+        if ( FileVolume2[fs.key()] == "-.-" ) {
+            checkItem2->setCheckState(Qt::Unchecked);
+        } else {
+            checkItem2->setCheckState(Qt::Checked);
+        }
+
+        QTableWidgetItem *volumeItem3 = new QTableWidgetItem( FileVolume3[fs.key()] );
+//        volumeItem3->setData(absoluteFileNameRole, QVariant(fs.key()));
+        volumeItem3->setToolTip(toolTip);
+        volumeItem3->setTextAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
+        volumeItem3->setFlags(volumeItem3->flags() ^ Qt::ItemIsEditable);
+
+        QTableWidgetItem *checkItem3 = new QTableWidgetItem( Qt::CheckStateRole );
+        if ( FileVolume3[fs.key()] == "-.-" ) {
+            checkItem3->setCheckState(Qt::Unchecked);
+        } else {
+            checkItem3->setCheckState(Qt::Checked);
+        }
+
         int row = filesTable->rowCount();
         filesTable->insertRow(row);
         filesTable->setItem(row, 0, fileNameItem);
         filesTable->setItem(row, 1, sizeItem);
-        filesTable->setItem(row, 2, volumeItem1);
-        filesTable->setItem(row, 3, volumeItem2);
-        filesTable->setItem(row, 4, volumeItem3);
-        filesTable->setItem(row, 5, codecItem);
+        filesTable->setItem(row, 2, codecItem);
+        filesTable->setItem(row, 3, volumeItem1);
+        filesTable->setItem(row, 4, checkItem1);
+        filesTable->setItem(row, 5, volumeItem2);
+        filesTable->setItem(row, 6, checkItem2);
+        filesTable->setItem(row, 7, volumeItem3);
+        filesTable->setItem(row, 8, checkItem3);
     }
-//    filesFoundLabel->setText(tr("Найдено %n медиафайлов", nullptr, FileSize.size() ));
-//    filesFoundLabel->setWordWrap(true);
 }
 
 QComboBox *Window::createComboBox(const QString &text)
@@ -469,11 +512,13 @@ QComboBox *Window::createComboBox(const QString &text)
 
 void Window::createFilesTable()
 {
-    filesTable = new QTableWidget(0, 6);
+
+    filesTable = new QTableWidget(0, 9);
     filesTable->setSelectionBehavior(QAbstractItemView::SelectRows);
 
     QStringList labels;
-    labels << tr("Filename") << tr("Size")<< tr("Vol 1")<< tr("Vol 2")<< tr("Vol 3")<< tr("Codec");
+    labels << tr("Файл") << tr("Размер")<< tr("Кодек")
+           << tr("Аудио1")<< tr("Выбор")<< tr("Аудио2")<< tr("Выбор")<< tr("Аудио3")<< tr("Выбор");
     filesTable->setHorizontalHeaderLabels(labels);
     filesTable->horizontalHeader()->setSectionResizeMode(0, QHeaderView::Stretch);
     filesTable->verticalHeader()->hide();
@@ -505,10 +550,10 @@ void Window::work_list()
     listItem = filesTable->selectedItems();
 
     if (!listItem.isEmpty()) {
-    Q_ASSERT(listItem.count() % 6 == 0);
-        // прыгаем через 3 элемента
+    Q_ASSERT(listItem.count() % 9 == 0);
+        // прыгаем через 9 элементов, кол-во столбцов в строке
         vyborFilesList.clear();
-        for (int i=0; i<listItem.size() ;i+=6) {
+        for (int i=0; i<listItem.size() ;i+=9) {
             vyborFile =listItem.at(i)->data(absoluteFileNameRole).toString();
             vyborFilesList << vyborFile;
         }

@@ -2,7 +2,8 @@
 #include "window.h"
 #include "audio.h"
 
-void Audio::set_audio_level(QString fileNameIn, QString fileNameOut, QString strDb, QString codec )
+//void Audio::set_audio_level(QString fileNameIn, QString fileNameOut, QString strDb, QString codec )
+void Audio::set_audio_level(QStringList process_args )
 {
 
 //    qDebug() <<"Start SET_AUDIO_LEVEL";
@@ -27,28 +28,42 @@ void Audio::set_audio_level(QString fileNameIn, QString fileNameOut, QString str
         env.insert("LD_LIBRARY_PATH", dirFFmpeg); // Add an environment variable
         process->setProcessEnvironment(env);
 
-        process->start( (dirFFmpeg+"/libffmpeg"), QStringList() << "-y" << "-hide_banner"
-                        << "-i" << fileNameIn
-                        <<"-map"<< "0:v"<< "-c:v"<< "copy"<< "-map"<< "0:a:0"<< "-c:a"<< codec
-                        <<"-map"<< "0:a:1?"<< "-c:a"<< codec<< "-map"<< "0:a:2?"<< "-c:a"<< codec
-                        <<"-af" << strDb
-                        <<"-c:s"<< "copy"<<"-c:v"<< "copy"
-                        <<"-strict"<< "experimental"
-                        <<fileNameOut
-                        );
+
+        //        process->start( (dirFFmpeg+"/libffmpeg"), QStringList() << "-y" << "-hide_banner"
+        //                        << "-i" << fileNameIn
+        //                        <<"-map"<< "0:v"<< "-c:v"<< "copy"
+        //                        << "-map"<< "0:a:0"<< "-c:a"<< codec <<"-map"<< "0:a:1?"<< "-c:a"<< codec<< "-map"<< "0:a:2?"<< "-c:a"<< codec
+        //                        <<"-af" << strDb
+        //                        <<"-c:s"<< "copy"<<"-c:v"<< "copy"
+        //                        <<"-strict"<< "experimental"
+        //                        <<fileNameOut
+        //                        );
+
+        process->start( (dirFFmpeg+"/libffmpeg"), process_args);
+
+        qDebug() << "Process arguments:";
+        for (const QString &str : process_args) {
+            qDebug() << str;
+        }
+
 
         if( !process->waitForStarted(1000) ) {
-            qDebug() <<"ERROR START SET_AUDIO_LEVEL args: "<<(dirFFmpeg+"/libffmpeg")
-                    << "-y"<< "-hide_banner" << "-i" << fileNameIn <<"-map"<< "0:v"<< "-c:v"<< "copy"<< "-map"<< "0:a:0"<< "-c:a"<< codec
-                    <<"-map"<< "0:a:1?"<< "-c:a"<< codec<< "-map"<< "0:a:2?"<< "-c:a"<< codec
-                    <<"-af" << strDb <<"-c:s"<< "copy"<<"-c:v"<< "copy" <<"-strict"<< "experimental"<<fileNameOut;
+//            qDebug() <<"ERROR START SET_AUDIO_LEVEL args: "<<(dirFFmpeg+"/libffmpeg")
+//                    << "-y"<< "-hide_banner" << "-i" << fileNameIn <<"-map"<< "0:v"<< "-c:v"<< "copy"<< "-map"<< "0:a:0"<< "-c:a"<< codec
+//                    <<"-map"<< "0:a:1?"<< "-c:a"<< codec<< "-map"<< "0:a:2?"<< "-c:a"<< codec
+//                    <<"-af" << strDb <<"-c:s"<< "copy"<<"-c:v"<< "copy" <<"-strict"<< "experimental"<<fileNameOut;
             return;
         }
 
-        qDebug() <<"START SET_AUDIO_LEVEL args: "  << (dirFFmpeg+"/libffmpeg")
-                << "-y"<< "-hide_banner" << "-i" << fileNameIn <<"-map"<< "0:v"<< "-c:v"<< "copy"<< "-map"<< "0:a:0"<< "-c:a"<< codec
-                <<"-map"<< "0:a:1?"<< "-c:a"<< codec<< "-map"<< "0:a:2?"<< "-c:a"<< codec
-                <<"-af" << strDb <<"-c:s"<< "copy"<<"-c:v"<< "copy" <<"-strict"<< "experimental"<<fileNameOut;
+//        qDebug() <<"START SET_AUDIO_LEVEL args: "  << (dirFFmpeg+"/libffmpeg")
+//                << "-y"<< "-hide_banner" << "-i" << fileNameIn <<"-map"<< "0:v"<< "-c:v"<< "copy"<< "-map"<< "0:a:0"<< "-c:a"<< codec
+//                <<"-map"<< "0:a:1?"<< "-c:a"<< codec<< "-map"<< "0:a:2?"<< "-c:a"<< codec
+//                <<"-af" << strDb <<"-c:s"<< "copy"<<"-c:v"<< "copy" <<"-strict"<< "experimental"<<fileNameOut;
+
+//        qDebug() <<"START SET_AUDIO_LEVEL args: "  << (dirFFmpeg+"/libffmpeg")
+//                << "-y"<< "-hide_banner" << "-i" << fileNameIn
+//                << codec <<"-af" << strDb <<"-c:s"<< "copy"<<"-c:v"<< "copy"
+//                <<"-strict"<< "experimental" <<fileNameOut;
 
         emit set_pS(msecFrameTime*100/msecDurTime);
 

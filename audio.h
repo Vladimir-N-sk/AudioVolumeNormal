@@ -23,6 +23,7 @@ public:
 
     void audio_level(QString fileName );
     void set_audio_level(QString fileNameIn, QString fileNameOut, QString strDb, QString codec);
+    void set_audio_level(QStringList process_args);
 
     void log_prog(QProcess::ProcessError process_error);
 
