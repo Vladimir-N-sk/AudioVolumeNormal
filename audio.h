@@ -54,7 +54,7 @@ protected:
 
 private:
     bool stop;
-    int numA;
+//    int numA;
 
 };
 

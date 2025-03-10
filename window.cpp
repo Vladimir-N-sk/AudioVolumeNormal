@@ -19,7 +19,7 @@ static inline void openFile(const QString &fileName)
 Window::Window(QWidget *parent)
     : QWidget(parent)
 {
-    setWindowTitle(tr("Audio Volume Normal"));
+    setWindowTitle(tr("Audio Volume Normal v.2.0"));
 
     const QIcon folderIcon = QIcon::fromTheme("folder-cyan");
 
@@ -59,7 +59,7 @@ Window::Window(QWidget *parent)
 */
 
     mainLayout->addWidget(new QLabel(tr("Найти файлы")), 0, 0, 1, 1);
-    mainLayout->addWidget(new QLabel(tr("формата медиа: mkv avi mp4")), 0, 1, 1, 1, Qt::AlignLeft);
+    mainLayout->addWidget(new QLabel(tr("формата медиа: mkv avi mp4 ts")), 0, 1, 1, 1, Qt::AlignLeft);
 
 #ifdef Q_OS_LINUX
     mainLayout->addWidget(new QLabel(tr("<Ctrl-Q> - выход")), 0, 2, 1, 1, Qt::AlignRight);
@@ -209,8 +209,8 @@ void Window::work()
                 if (  !(testFile.open(QIODevice::WriteOnly | QIODevice::Truncate)) ) {
                     qDebug()<< "Not open output file: " << avnFile;
                     QMessageBox::critical(this, tr("Предупреждение"), tr("<h2>Внимание</h2>\n"
-                                                           "Что-то пошло не так!\n"
-                                                           "Не удалось создать тестовый файл."),
+                                                                         "Что-то пошло не так!\n"
+                                                                         "Не удалось создать тестовый файл."),
                                           QMessageBox::Ok, QMessageBox::NoButton);
                 }
                 testFile.close();
@@ -223,6 +223,10 @@ void Window::work()
                                               QMessageBox::Ok, QMessageBox::NoButton);
                     }
                 }
+
+                if ( FileCheck1.value(inFile) ) qDebug() << "FileCheck1 is checked.";
+                if ( FileCheck2.value(inFile) ) qDebug() << "FileCheck2 is checked.";
+                if ( FileCheck3.value(inFile) ) qDebug() << "FileCheck3 is checked.";
 
                 if ( FileVolume1.value(inFile) == "-.-" ) {
 
@@ -239,46 +243,66 @@ void Window::work()
                     qDebug()<< "Volume audio3: " << FileVolume3.value(inFile);
                     qDebug()<< "Codec: " << FileCodec.value(inFile);
 
-                    dDb1=FileVolume1.value(inFile).trimmed().toDouble(&ok);
-                    if (!ok) {
-                        qDebug()<< "FileVolume1.value Conversion double ERROR! Value:" << FileVolume1.value(inFile);
-                        exit(1);
+                    dDb1=dDb2=dDb3=max=0.0;
+                    if ( FileCheck1.value(inFile) ) {
+                        qDebug() << "Audio 1 is checked.";
+                        dDb1=FileVolume1.value(inFile).trimmed().toDouble(&ok);
+                        if (!ok) qDebug()<< "Audio1 value Conversion double ERROR! Value:" << FileVolume1.value(inFile);
                     }
-                    dDb2=FileVolume2.value(inFile).trimmed().toDouble(&ok);
-                    if (!ok) dDb2=dDb1;
-                    dDb3=FileVolume3.value(inFile).trimmed().toDouble(&ok);
-                    if (!ok) dDb3=dDb1;
+                    if ( FileCheck2.value(inFile) ){
+                        qDebug() << "Audio 2 is checked.";
+                        dDb2=FileVolume2.value(inFile).trimmed().toDouble(&ok);
+                        if (!ok) qDebug()<< "Audio2 value Conversion double ERROR! Value:" << FileVolume2.value(inFile);
+                    }
+                    if ( FileCheck3.value(inFile) ) {
+                        qDebug() << "Audio 3 is checked.";
+                        dDb3=FileVolume3.value(inFile).trimmed().toDouble(&ok);
+                        if (!ok) qDebug()<< "Audio3 value Conversion double ERROR! Value:" << FileVolume3.value(inFile);
+                    }
 
                     if ( (dDb1 < -1) && (dDb2 < -1) && (dDb3 < -1) ) {
-
-                        max = (dDb1>dDb2)? dDb1 : dDb2;
-                        max = (max >dDb3)? max  : dDb3;
-                        max = -1 * max;
-
-                        QString strDb="volume=" + QString::number(max)+"dB";
-                        qDebug()<< "Filter: " << strDb;
-
-                        QStringList list_args;
-                        list_args<< "-y" << "-hide_banner"
-                                 << "-i" << inFile
-                                 <<"-map"<< "0:v"<< "-c:v"<< "copy"
-                                 << "-map"<< "0:a:0"<< "-c:a"<< FileCodec.value(inFile)
-                                 <<"-map"<< "0:a:1?"<< "-c:a"<< FileCodec.value(inFile)
-                                 << "-map"<< "0:a:2?"<< "-c:a"<< FileCodec.value(inFile)
-                                 <<"-af" << strDb
-                                 <<"-c:s"<< "copy"<<"-c:v"<< "copy"
-                                 <<"-strict"<< "experimental"
-                                 <<avnFile;
-
-                        sb->showMessage(tr("Изменяем уровень аудио в файле: ")+avnFile );
-
-                        //                            audio->set_audio_level( inFile, avnFile, strDb, FileCodec.value(inFile));
-                        //                            audio->set_audio_level( inFile, avnFile, strDb, codec);
-
-                        audio->set_audio_level( list_args );
-
+                        max = (dDb2>dDb1)? dDb2 : dDb1;
+                        max = (max >dDb3)?  max : dDb3;
+                    } else if  ((dDb1 < -1) && (dDb2 < -1)) {
+                        max = (dDb2>dDb1)? dDb2 : dDb1;
+                    } else if ((dDb2 < -1) && (dDb3 < -1)) {
+                        max = (dDb2>dDb3)? dDb2 : dDb3;
+                    } else if ((dDb1 < -1) && (dDb3 < -1)) {
+                        max = (dDb1>dDb3)? dDb1 : dDb3;
+                    } else if (dDb1 < -1) {
+                        max=dDb1;
+                    } else if (dDb2 < -1) {
+                        max=dDb2;
+                    } else if (dDb3 < -1) {
+                        max=dDb3;
                     }
-                } else {
+                    max = -1 * max;
+
+                    QString strDb="volume=" + QString::number(max)+"dB";
+                    qDebug()<< "Filter: " << strDb;
+
+                    QStringList list_args;
+                    list_args<< "-y" << "-hide_banner"<< "-i" << inFile
+                             <<"-map"<< "0:v"<< "-c:v"<< "copy";
+
+                    if (FileCheck1.value(inFile)) list_args<< "-map"<< "0:a:0"<< "-c:a"<< FileCodec.value(inFile);
+                    if (FileCheck2.value(inFile)) list_args<< "-map"<< "0:a:1"<< "-c:a"<< FileCodec.value(inFile);
+                    if (FileCheck3.value(inFile)) list_args<< "-map"<< "0:a:2"<< "-c:a"<< FileCodec.value(inFile);
+
+                    list_args<<"-af" << strDb <<"-c:s"<< "copy"<<"-c:v"<< "copy"
+                            <<"-strict"<< "experimental" <<avnFile;
+
+                    qDebug() << "Process arguments:";
+                    for (const QString &str : list_args) {
+                        qDebug() << str;
+                    }
+
+ exit(0);
+
+                    sb->showMessage(tr("Изменяем уровень аудио в файле: ")+avnFile );
+                    audio->set_audio_level( list_args );
+
+            } else {
 
                     qDebug()<< "File: " << inFile;
                     qDebug()<< "Volume audio1: " << FileVolume1.value(inFile);
@@ -286,45 +310,71 @@ void Window::work()
                     qDebug()<< "Volume audio3: " << FileVolume3.value(inFile);
                     qDebug()<< "Codec: " << FileCodec.value(inFile);
 
-                    dDb1=FileVolume1.value(inFile).trimmed().toDouble(&ok);
-                    if (!ok) {
-                        qDebug()<< "FileVolume1.value Conversion double ERROR! Value:" << FileVolume1.value(inFile);
-                        exit(1);
+                    dDb1=dDb2=dDb3=max=0.0;
+                    if ( FileCheck1.value(inFile) ) {
+                        qDebug() << "Audio 1 is checked.";
+                        dDb1=FileVolume1.value(inFile).trimmed().toDouble(&ok);
+                        if (!ok) qDebug()<< "Audio1 value Conversion double ERROR! Value:" << FileVolume1.value(inFile);
                     }
-                    dDb2=FileVolume2.value(inFile).trimmed().toDouble(&ok);
-                    if (!ok) dDb2=dDb1;
-                    dDb3=FileVolume3.value(inFile).trimmed().toDouble(&ok);
-                    if (!ok) dDb3=dDb1;
+                    if ( FileCheck2.value(inFile) ){
+                        qDebug() << "Audio 2 is checked.";
+                        dDb2=FileVolume2.value(inFile).trimmed().toDouble(&ok);
+                        if (!ok) qDebug()<< "Audio2 value Conversion double ERROR! Value:" << FileVolume2.value(inFile);
+                    }
+                    if ( FileCheck3.value(inFile) ) {
+                        qDebug() << "Audio 3 is checked.";
+                        dDb3=FileVolume3.value(inFile).trimmed().toDouble(&ok);
+                        if (!ok) qDebug()<< "Audio3 value Conversion double ERROR! Value:" << FileVolume3.value(inFile);
+                    }
 
                     if ( (dDb1 < -1) && (dDb2 < -1) && (dDb3 < -1) ) {
-
-                        max = (dDb1>dDb2)? dDb1 : dDb2;
-                        max = (max >dDb3)? max  : dDb3;
-                        max = -1 * max;
-
-                        QString strDb="volume=" + QString::number(max)+"dB";
-                        qDebug()<< "Filter: " << strDb;
-
-                        QStringList list_args;
-                        list_args<< "-y" << "-hide_banner"
-                                 << "-i" << inFile
-                                 <<"-map"<< "0:v"<< "-c:v"<< "copy"
-                                << "-map"<< "0:a:0"<< "-c:a"<< FileCodec.value(inFile)
-                                <<"-map"<< "0:a:1?"<< "-c:a"<< FileCodec.value(inFile)
-                               << "-map"<< "0:a:2?"<< "-c:a"<< FileCodec.value(inFile)
-                               <<"-af" << strDb
-                              <<"-c:s"<< "copy"<<"-c:v"<< "copy"
-                             <<"-strict"<< "experimental"
-                            <<avnFile;
-
-                        sb->showMessage(tr("Изменяем уровень аудио в файле: ")+avnFile );
-
-                        //                            audio->set_audio_level(inFile, avnFile, strDb, FileCodec.value(inFile) );
-                        audio->set_audio_level( list_args );
+                        max = (dDb2>dDb1)? dDb2 : dDb1;
+                        max = (max >dDb3)?  max : dDb3;
+                    } else if  ((dDb1 < -1) && (dDb2 < -1)) {
+                        max = (dDb2>dDb1)? dDb2 : dDb1;
+                    } else if ((dDb2 < -1) && (dDb3 < -1)) {
+                        max = (dDb2>dDb3)? dDb2 : dDb3;
+                    } else if ((dDb1 < -1) && (dDb3 < -1)) {
+                        max = (dDb1>dDb3)? dDb1 : dDb3;
+                    } else if (dDb1 < -1) {
+                        max=dDb1;
+                    } else if (dDb2 < -1) {
+                        max=dDb2;
+                    } else if (dDb3 < -1) {
+                        max=dDb3;
                     }
+                    max = -1 * max;
+
+                    QString strDb="volume=" + QString::number(max)+"dB";
+                    qDebug()<< "Filter: " << strDb;
+
+                    QStringList list_args;
+                    list_args<< "-y" << "-hide_banner"<< "-i" << inFile
+                             <<"-map"<< "0:v"<< "-c:v"<< "copy";
+
+                    if (FileCheck1.value(inFile)) list_args<< "-map"<< "0:a:0"<< "-c:a"<< FileCodec.value(inFile);
+                    if (FileCheck2.value(inFile)) list_args<< "-map"<< "0:a:1"<< "-c:a"<< FileCodec.value(inFile);
+                    if (FileCheck3.value(inFile)) list_args<< "-map"<< "0:a:2"<< "-c:a"<< FileCodec.value(inFile);
+
+                    list_args<<"-af" << strDb <<"-c:s"<< "copy"<<"-c:v"<< "copy"
+                            <<"-strict"<< "experimental" <<avnFile;
+
+                    qDebug() << "Process arguments:";
+                    for (const QString &str : list_args) {
+                        qDebug() << str;
+                    }
+
+ exit(0);
+
+                    sb->showMessage(tr("Изменяем уровень аудио в файле: ")+avnFile );
+
+                    //                            audio->set_audio_level(inFile, avnFile, strDb, FileCodec.value(inFile) );
+                    audio->set_audio_level( list_args );
                 }
                 sb->showMessage(tr("Уровень аудио в файле ")+
-                    QDir::toNativeSeparators(currentDir.relativeFilePath(inFile)) + tr(" норма") );
+                                QDir::toNativeSeparators(currentDir.relativeFilePath(inFile)) + tr(" норма") );
+                qDebug() << tr("Уровень аудио в файле ")
+                         <<QDir::toNativeSeparators(currentDir.relativeFilePath(inFile)) << tr(" норма.");
             }
             pbD3->hide();
         }
@@ -353,7 +403,7 @@ void Window::find()
 //                    QDirIterator::Subdirectories);
 
 //Без субдиреториев (для скорости)
-    QDirIterator it(path, {"*.mkv","*.avi","*.mp4"},
+    QDirIterator it(path, {"*.mkv","*.avi","*.mp4","*.ts"},
                     QDir::AllEntries | QDir::NoSymLinks | QDir::NoDotAndDotDot
                     );
 
@@ -418,15 +468,12 @@ void Window::showMapFiles()
     for (int i = rt ; i >= 0; i--) filesTable->removeRow(i);
 
     QMapIterator<QString, qint64> fs(FileSize);
-//    QMapIterator<QString, QString> fv1(FileVolume1);
-//    QMapIterator<QString, QString> fv2(FileVolume2);
-//    QMapIterator<QString, QString> fv3(FileVolume3);
-//    QMapIterator<QString, QString> fc(FileCodec);
+//    QHashIterator<QString, qint64> fs(FileSize);
 
     while (fs.hasNext()) {
         fs.next();
-//        const QString toolTip = QDir::toNativeSeparators(fs.key());
         const QString toolTip = "Двойной клик и начнется выполнение задания над этим файлом.";
+        const QString tTC = "Выбор обрабатывать или не обрабатывать этот аудио поток";
         const QString relativePath = QDir::toNativeSeparators(currentDir.relativeFilePath(fs.key()));
         const qint64 size = QFileInfo(fs.key()).size();
 
@@ -454,6 +501,7 @@ void Window::showMapFiles()
         volumeItem1->setFlags(volumeItem1->flags() ^ Qt::ItemIsEditable);
 
         QTableWidgetItem *checkItem1 = new QTableWidgetItem( Qt::CheckStateRole );
+        checkItem1->setToolTip(tTC);
         if ( FileVolume1[fs.key()] == "-.-" ) {
             checkItem1->setCheckState(Qt::Unchecked);
         } else {
@@ -462,12 +510,12 @@ void Window::showMapFiles()
 
 
         QTableWidgetItem *volumeItem2 = new QTableWidgetItem( FileVolume2[fs.key()] );
-//        volumeItem2->setData(absoluteFileNameRole, QVariant(fs.key()));
         volumeItem2->setToolTip(toolTip);
         volumeItem2->setTextAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
         volumeItem2->setFlags(volumeItem2->flags() ^ Qt::ItemIsEditable);
 
         QTableWidgetItem *checkItem2 = new QTableWidgetItem( Qt::CheckStateRole );
+        checkItem2->setToolTip(tTC);
         if ( FileVolume2[fs.key()] == "-.-" ) {
             checkItem2->setCheckState(Qt::Unchecked);
         } else {
@@ -475,12 +523,12 @@ void Window::showMapFiles()
         }
 
         QTableWidgetItem *volumeItem3 = new QTableWidgetItem( FileVolume3[fs.key()] );
-//        volumeItem3->setData(absoluteFileNameRole, QVariant(fs.key()));
         volumeItem3->setToolTip(toolTip);
         volumeItem3->setTextAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
         volumeItem3->setFlags(volumeItem3->flags() ^ Qt::ItemIsEditable);
 
         QTableWidgetItem *checkItem3 = new QTableWidgetItem( Qt::CheckStateRole );
+        checkItem3->setToolTip(tTC);
         if ( FileVolume3[fs.key()] == "-.-" ) {
             checkItem3->setCheckState(Qt::Unchecked);
         } else {
@@ -536,9 +584,22 @@ void Window::createFilesTable()
 void Window::openFileOfItem(int row, int /* column */)
 {
     const QTableWidgetItem *item = filesTable->item(row, 0);
+    const QTableWidgetItem *item4 = filesTable->item(row, 4);
+    const QTableWidgetItem *item6 = filesTable->item(row, 6);
+    const QTableWidgetItem *item8 = filesTable->item(row, 8);
+
     vyborFile = fileNameOfItem(item);
     vyborFilesList.clear();
     vyborFilesList << vyborFile;
+
+    FileCheck1.clear();
+    FileCheck2.clear();
+    FileCheck3.clear();
+
+    FileCheck1.insert(vyborFile, item4->checkState() );
+    FileCheck2.insert(vyborFile, item6->checkState() );
+    FileCheck3.insert(vyborFile, item8->checkState() );
+
     work();
     showMapFiles();
 }
@@ -553,9 +614,15 @@ void Window::work_list()
     Q_ASSERT(listItem.count() % 9 == 0);
         // прыгаем через 9 элементов, кол-во столбцов в строке
         vyborFilesList.clear();
+        FileCheck1.clear();
+        FileCheck2.clear();
+        FileCheck3.clear();
         for (int i=0; i<listItem.size() ;i+=9) {
-            vyborFile =listItem.at(i)->data(absoluteFileNameRole).toString();
+            vyborFile=listItem.at(i)->data(absoluteFileNameRole).toString();
             vyborFilesList << vyborFile;
+            FileCheck1.insert(vyborFile, listItem.at(i+4)->checkState() );
+            FileCheck2.insert(vyborFile, listItem.at(i+6)->checkState() );
+            FileCheck3.insert(vyborFile, listItem.at(i+8)->checkState() );
         }
         work();
         showMapFiles();
@@ -577,6 +644,11 @@ void Window::animateFindClick()
 void Window::contextMenu(const QPoint &pos)
 {
     const QTableWidgetItem *item = filesTable->itemAt(pos);
+
+    const QTableWidgetItem *item4 = filesTable->item(item->row(), 4);
+    const QTableWidgetItem *item6 = filesTable->item(item->row(), 6);
+    const QTableWidgetItem *item8 = filesTable->item(item->row(), 8);
+
     if (!item)
         return;
     QMenu menu;
@@ -587,12 +659,19 @@ void Window::contextMenu(const QPoint &pos)
     QAction *action = menu.exec(filesTable->mapToGlobal(pos));
     if (!action)
         return;
-//    const QString fileName = fileNameOfItem(item);
+
     vyborFile = fileNameOfItem(item);
     if (action == openAction) {
-//        vyborFile = fileName;
         vyborFilesList.clear();
         vyborFilesList << vyborFile;
+
+        FileCheck1.clear();
+        FileCheck2.clear();
+        FileCheck3.clear();
+        FileCheck1.insert(vyborFile, item4->checkState() );
+        FileCheck2.insert(vyborFile, item6->checkState() );
+        FileCheck3.insert(vyborFile, item8->checkState() );
+
         work();
         showMapFiles();
     }

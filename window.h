@@ -11,6 +11,7 @@
 #include <QDialog>
 #include <QStatusBar>
 #include <QMap>
+#include <QHash>
 #include <QList>
 #include <QLocale>
 #include <QtGlobal>
@@ -50,10 +51,23 @@ friend class Audio;
 
 protected:
     QMap<QString, qint64> FileSize;
-    QMap<QString, QString> FileVolume1;
-    QMap<QString, QString> FileVolume2;
-    QMap<QString, QString> FileVolume3;
-    QMap<QString, QString> FileCodec;
+//    QMap<QString, QString> FileVolume1;
+//    QMap<QString, QString> FileVolume2;
+//    QMap<QString, QString> FileVolume3;
+//    QMap<QString, QString> FileCodec;
+
+//    QHash<QString, qint64> FileSize;
+    QHash<QString, QString> FileCodec;
+    QHash<QString, QString> FileVolume1;
+    QHash<QString, QString> FileVolume2;
+    QHash<QString, QString> FileVolume3;
+
+    QHash<QString, bool> FileCheck1;
+    QHash<QString, bool> FileCheck2;
+    QHash<QString, bool> FileCheck3;
+
+
+
     QString strMaxVolume;
     QList<QTableWidgetItem *> listItem;
 

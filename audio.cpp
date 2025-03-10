@@ -111,14 +111,15 @@ void Audio::set_audio_level(QStringList process_args )
 void Audio::audio_level(QString fileName )
 {
 
-    int msecDurTime=1, msecFrameTime=0, streamAudio=0;
+    int msecDurTime=1, msecFrameTime=0, streamAudio=0, kodek=0;
+    int mFT[] {0,0,0};
     stop = false;
 
     QString dirFFmpeg = QCoreApplication::applicationDirPath()+"/lib";
 
     if ( !QFile(dirFFmpeg+"/libffmpeg").exists() ) {
-            qDebug() << "Not found file lib/libffmpeg" ;
-            exit(1);
+        qDebug() << "Not found file lib/libffmpeg" ;
+        exit(1);
     }
 
     QProcess *process = new QProcess(parent());
@@ -130,90 +131,124 @@ void Audio::audio_level(QString fileName )
     env.insert("LD_LIBRARY_PATH", dirFFmpeg); // Add an environment variable
     process->setProcessEnvironment(env);
 
-        process->start( (dirFFmpeg+"/libffmpeg"), QStringList()
-                        << "-hide_banner" << "-i" << fileName
-                        << "-map" << "0:a:0" << "-map" << "0:a:1?" << "-map" << "0:a:2?"
-                        <<"-af" << filter_vol_detect
-                        <<"-vn"<< "-sn"<< "-dn"<<"-f" << "null" << "/dev/null");
-
+    //Определяем кол-во аудио потоков
+    process->start( (dirFFmpeg+"/libffmpeg"), QStringList()
+                    << "-hide_banner" << "-i" << fileName);
 
     if( !process->waitForStarted(1000) ) {
         qDebug() <<"ERROR START AUDIO_LEVEL args: "<<(dirFFmpeg+"/libffmpeg")
-                << " -hide_banner " << " -i " << fileName
-                << "-map" << "0:a:0" << "-map" << "0:a:1?" << "-map" << "0:a:2?"
-                <<" -af " << filter_vol_detect
-                <<" -vn "<< " -sn "<< " -dn "<<" -f " << " null " << " /dev/null";
+                << " -hide_banner " << " -i " << fileName;
         return;
     }
 
-    qDebug() <<"START AUDIO_LEVEL args: "<<(dirFFmpeg+"/libffmpeg")
-            << " -hide_banner " << " -i " << fileName
-            << "-map" << "0:a:0" << "-map" << "0:a:1?" << "-map" << "0:a:2?"
-            <<" -af " << filter_vol_detect
-            <<" -vn "<< " -sn "<< " -dn "<<" -f " << " null " << " /dev/null";
-
     emit set_pS(0);
-    emit set_pD(msecFrameTime*100/msecDurTime);
-    numA=1;
-    QCoreApplication::processEvents();
     while (process->waitForReadyRead(-1)) {
-        if (stop) {
-            qDebug()<< "!!! Resv signal STOP Process !!!" ;
-            process->close();
-            delete process;
-            return;
-        }
         while(process->canReadLine()){
-
             QString line = QString(process->readLine() );
+            //            qDebug()<< "Line from ffmpeg:" << line;
+            if ( line.contains("Audio:"))  streamAudio++;
 
-//            qDebug()<< "Line from ffmpeg:" << line;
-
-            if ( line.contains("time=") ){
-                int tt=line.indexOf("bit",0)-(line.indexOf("time",0)+5) ;
-                QString tim = line.mid(line.indexOf("time",0)+5,tt);
-                QTime frameTime = QTime::fromString(tim);
-                msecFrameTime = QTime(0, 0, 0).msecsTo(frameTime);
-            } else if ( line.contains("Duration:") ){
-                int nn=line.indexOf(",",0)-(line.indexOf("Dur",0)+10) ;
-                QString dur = line.mid(12,nn);
-                QTime durTime = QTime::fromString(dur);
-                msecDurTime = QTime(0, 0, 0).msecsTo(durTime);
-
-            } else if (line.contains("max_volume:")) {
-
-                int mm=line.indexOf("dB",0)-(line.indexOf("max_vol",0)+11) ;
-                QString max = line.mid(line.indexOf("max_vol",0)+11 ,mm).trimmed();
-                switch (numA) {
-                case 1:
-                    emit send_max_vol1(fileName, max);
-                    numA++;
-                    break;
-                case 2:
-                    emit send_max_vol2(fileName, max);
-                    numA++;
-                    break;
-                case 3:
-                    emit send_max_vol3(fileName, max);
-                    numA++;
-                    break;
-                default:
-                    break;
-                }
-            } else if ( line.contains("Audio:") && streamAudio == 0  ) {
-                streamAudio++;
-                int aa=line.indexOf("Audio:",0);
-                int bb=line.indexOf(QRegExp("[^0-9a-z-A-Z]"), aa+8);
-                int cc = bb-aa-7;
-                QString cod = line.mid(aa+7,cc).trimmed();
-                emit send_codec(fileName, cod);
-            }
-
-            emit set_pD(msecFrameTime*100/msecDurTime);
-            QCoreApplication::processEvents();
         }           //process->canReadLine
     }               // rocess->waitForReadyRead
 
+    //больше 3-х (0,1,2) потоков не обрабатываем
+        if (streamAudio>3) streamAudio=3;
+
+    qDebug()<< "Count Audio straem:" << streamAudio;
+
+    //Опрос аудио потоков
+
+    for (int nn=0; nn<streamAudio; nn++) {
+
+        QStringList list_args;
+        list_args<< "-hide_banner" << "-i" << fileName;
+
+        QString ann="0:a:" + QString::number(nn);
+        list_args << "-map" << ann;
+
+        list_args<<"-af"<<filter_vol_detect<<"-vn"<< "-sn"<< "-dn"<<"-f"<< "null"<<"/dev/null";
+
+        process->start( (dirFFmpeg+"/libffmpeg"), list_args);
+
+        if( !process->waitForStarted(1000) ) {
+            qDebug() <<"ERROR START AUDIO_LEVEL args: "<<(dirFFmpeg+"/libffmpeg")
+                    << " -hide_banner " << " -i " << fileName
+                    << "-map" << ann
+                    <<" -af " << filter_vol_detect
+                   <<" -vn "<< " -sn "<< " -dn "<<" -f " << " null " << " /dev/null";
+            return;
+        }
+
+        qDebug() <<"START AUDIO_LEVEL args: "<<(dirFFmpeg+"/libffmpeg")
+                << " -hide_banner " << " -i " << fileName
+                << "-map" << ann
+                <<" -af " << filter_vol_detect
+                <<" -vn "<< " -sn "<< " -dn "<<" -f " << " null " << " /dev/null";
+
+        emit set_pD( ((mFT[0]+mFT[1]+mFT[2])*100)/(msecDurTime*streamAudio) );
+        QCoreApplication::processEvents();
+
+        while (process->waitForReadyRead(-1)) {
+            if (stop) {
+                qDebug()<< "!!! Resv signal STOP Process !!!" ;
+                process->close();
+                delete process;
+                return;
+            }
+            while(process->canReadLine()){
+
+                QString line = QString(process->readLine() );
+
+                qDebug()<< "Line from ffmpeg:" << line;
+
+                if ( line.contains("time=") ){
+                    int tt=line.indexOf("bit",0)-(line.indexOf("time",0)+5) ;
+                    QString tim = line.mid(line.indexOf("time",0)+5,tt);
+                    QTime frameTime = QTime::fromString(tim);
+                    mFT[nn] = QTime(0, 0, 0).msecsTo(frameTime);
+                } else if ( line.contains("Duration:") ){
+                    if (msecDurTime == 1) {
+                        int nn=line.indexOf(",",0)-(line.indexOf("Dur",0)+10) ;
+                        QString dur = line.mid(12,nn);
+                        QTime durTime = QTime::fromString(dur);
+                        msecDurTime = QTime(0, 0, 0).msecsTo(durTime);
+                    }
+                } else if (line.contains("max_volume:")) {
+
+                    int mm=line.indexOf("dB",0)-(line.indexOf("max_vol",0)+11) ;
+                    QString max = line.mid(line.indexOf("max_vol",0)+11 ,mm).trimmed();
+
+                    switch (nn) {
+                    case 0:
+                        qDebug()<< "!!! send_max_vol1:"<< max;
+                        emit send_max_vol1(fileName, max);
+                        break;
+                    case 1:
+                        qDebug()<< "!!! send_max_vol2:"<< max;
+                        emit send_max_vol2(fileName, max);
+                        break;
+                    case 2:
+                        qDebug()<< "!!! send_max_vol3:"<< max;
+                        emit send_max_vol3(fileName, max);
+                        break;
+                    default:
+                        break;
+                    }
+                    QCoreApplication::processEvents();
+                } else if ( line.contains("Audio:") && kodek == 0  ) {
+                    kodek++;
+                    int aa=line.indexOf("Audio:",0);
+                    int bb=line.indexOf(QRegExp("[^0-9a-z-A-Z]"), aa+8);
+                    int cc = bb-aa-7;
+                    QString cod = line.mid(aa+7,cc).trimmed();
+                    emit send_codec(fileName, cod);
+                    QCoreApplication::processEvents();
+                }
+                emit set_pD( ((mFT[0]+mFT[1]+mFT[2])*100)/(msecDurTime*streamAudio) );
+                QCoreApplication::processEvents();
+            }           //process->canReadLine
+        }               // rocess->waitForReadyRead
+    }//end for
     emit set_pD(100);
     qDebug() << "AUDIO_LEVEL End process.";
     process->close();
