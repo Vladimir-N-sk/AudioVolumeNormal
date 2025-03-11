@@ -127,6 +127,8 @@ Window::Window(QWidget *parent)
     connect(pbD3,&pbDialog3::rejected, audio, &Audio::recv_cancel_pD );
     connect(pbD3,&pbDialog::rejected, this, &Window::recv_stop );
 
+    colorText = QApplication::palette().color(QPalette::Active, QPalette::Text).value();
+
     sb->showMessage(tr("Для начала работы нажмите <Найти файлы>"));
 }
 
@@ -158,6 +160,7 @@ void Window::work()
         if ( rb1->isChecked()) {
 
             stop = false;
+            pbD->setModal(true);
             pbD->show();
             for (int i = 0; i < vyborFilesList.size(); ++i) {
                 if (stop) {
@@ -230,13 +233,15 @@ void Window::work()
 
                 if ( FileVolume1.value(inFile) == "-.-" ) {
 
-                    sb->showMessage(tr("Находим текущий уровень аудио в файле: ")+avnFile );
+                    sb->showMessage(tr("Находим текущий уровень аудио в файле: ")+inFile );
                     audio->audio_level(inFile);
                     if (stop) {
                         sb->showMessage(tr("Процесс прерван."));
                         break;
                     }
 
+                    showMapFiles();
+
                     qDebug()<< "File: " << inFile;
                     qDebug()<< "Volume audio1: " << FileVolume1.value(inFile);
                     qDebug()<< "Volume audio2: " << FileVolume2.value(inFile);
@@ -244,20 +249,25 @@ void Window::work()
                     qDebug()<< "Codec: " << FileCodec.value(inFile);
 
                     dDb1=dDb2=dDb3=max=0.0;
-                    if ( FileCheck1.value(inFile) ) {
-                        qDebug() << "Audio 1 is checked.";
-                        dDb1=FileVolume1.value(inFile).trimmed().toDouble(&ok);
-                        if (!ok) qDebug()<< "Audio1 value Conversion double ERROR! Value:" << FileVolume1.value(inFile);
+                    dDb1=FileVolume1.value(inFile).trimmed().toDouble(&ok);
+                    if (!ok) {
+                        qDebug()<< "Audio 1 value Conversion double ERROR! Value:" << FileVolume1.value(inFile);
+                    } else {
+                        FileCheck1.insert(inFile, true );
                     }
-                    if ( FileCheck2.value(inFile) ){
-                        qDebug() << "Audio 2 is checked.";
-                        dDb2=FileVolume2.value(inFile).trimmed().toDouble(&ok);
-                        if (!ok) qDebug()<< "Audio2 value Conversion double ERROR! Value:" << FileVolume2.value(inFile);
+
+                    dDb2=FileVolume2.value(inFile).trimmed().toDouble(&ok);
+                    if (!ok) {
+                        qDebug()<< "Audio 2 value Conversion double ERROR! Value:" << FileVolume2.value(inFile);
+                    } else {
+                        FileCheck2.insert(inFile, true );
                     }
-                    if ( FileCheck3.value(inFile) ) {
-                        qDebug() << "Audio 3 is checked.";
-                        dDb3=FileVolume3.value(inFile).trimmed().toDouble(&ok);
-                        if (!ok) qDebug()<< "Audio3 value Conversion double ERROR! Value:" << FileVolume3.value(inFile);
+
+                    dDb3=FileVolume3.value(inFile).trimmed().toDouble(&ok);
+                    if (!ok) {
+                        qDebug()<< "Audio 3 value Conversion double ERROR! Value:" << FileVolume3.value(inFile);
+                    } else {
+                        FileCheck3.insert(inFile, true );
                     }
 
                     if ( (dDb1 < -1) && (dDb2 < -1) && (dDb3 < -1) ) {
@@ -277,6 +287,15 @@ void Window::work()
                         max=dDb3;
                     }
                     max = -1 * max;
+                    if ( max<1) {
+                        sb->showMessage(tr("Уровень аудио в файле ")
+                                        +QDir::toNativeSeparators(currentDir.relativeFilePath(inFile))
+                                        +tr(" не будет изменён.") );
+                        qDebug() << tr("Уровень аудио в файле ")
+                                 <<QDir::toNativeSeparators(currentDir.relativeFilePath(inFile))
+                                << tr(" не будет изменён.");
+                        continue;
+                    }
 
                     QString strDb="volume=" + QString::number(max)+"dB";
                     qDebug()<< "Filter: " << strDb;
@@ -296,13 +315,11 @@ void Window::work()
                     for (const QString &str : list_args) {
                         qDebug() << str;
                     }
-
- exit(0);
 
                     sb->showMessage(tr("Изменяем уровень аудио в файле: ")+avnFile );
                     audio->set_audio_level( list_args );
 
-            } else {
+                } else {
 
                     qDebug()<< "File: " << inFile;
                     qDebug()<< "Volume audio1: " << FileVolume1.value(inFile);
@@ -327,6 +344,14 @@ void Window::work()
                         if (!ok) qDebug()<< "Audio3 value Conversion double ERROR! Value:" << FileVolume3.value(inFile);
                     }
 
+                    if ( !FileCheck1.value(inFile) && !FileCheck2.value(inFile) && !FileCheck3.value(inFile)) {
+                        sb->showMessage(tr("ВНИМАНИЕ! Для файла ")+
+                                        QDir::toNativeSeparators(currentDir.relativeFilePath(inFile)) + tr(" не был выбран ни один аудио.") );
+                        qDebug() << tr("ВНИМАНИЕ! Для файла ")
+                                 <<QDir::toNativeSeparators(currentDir.relativeFilePath(inFile)) << tr(" не был выбран ни один аудио.");
+                        continue;
+                    }
+
                     if ( (dDb1 < -1) && (dDb2 < -1) && (dDb3 < -1) ) {
                         max = (dDb2>dDb1)? dDb2 : dDb1;
                         max = (max >dDb3)?  max : dDb3;
@@ -344,6 +369,13 @@ void Window::work()
                         max=dDb3;
                     }
                     max = -1 * max;
+                    if ( max<1) {
+                        sb->showMessage(tr("Уровень аудио в файле ")+
+                                        QDir::toNativeSeparators(currentDir.relativeFilePath(inFile)) + tr(" не будет изменён.") );
+                        qDebug() << tr("Уровень аудио в файле ")
+                                 <<QDir::toNativeSeparators(currentDir.relativeFilePath(inFile)) << tr(" не будет изменён.");
+                        continue;
+                    }
 
                     QString strDb="volume=" + QString::number(max)+"dB";
                     qDebug()<< "Filter: " << strDb;
@@ -364,17 +396,12 @@ void Window::work()
                         qDebug() << str;
                     }
 
- exit(0);
+//exit(0);
 
                     sb->showMessage(tr("Изменяем уровень аудио в файле: ")+avnFile );
 
-                    //                            audio->set_audio_level(inFile, avnFile, strDb, FileCodec.value(inFile) );
                     audio->set_audio_level( list_args );
                 }
-                sb->showMessage(tr("Уровень аудио в файле ")+
-                                QDir::toNativeSeparators(currentDir.relativeFilePath(inFile)) + tr(" норма") );
-                qDebug() << tr("Уровень аудио в файле ")
-                         <<QDir::toNativeSeparators(currentDir.relativeFilePath(inFile)) << tr(" норма.");
             }
             pbD3->hide();
         }
@@ -397,10 +424,6 @@ void Window::find()
     currentDir = QDir(path);
 
     updateComboBox(directoryComboBox);
-
-//    QDirIterator it(path, {"*.mkv","*.avi","*.mp4"},
-//                    QDir::AllEntries | QDir::NoSymLinks | QDir::NoDotAndDotDot,
-//                    QDirIterator::Subdirectories);
 
 //Без субдиреториев (для скорости)
     QDirIterator it(path, {"*.mkv","*.avi","*.mp4","*.ts"},
@@ -463,12 +486,12 @@ void Window::createMapFiles(const QStringList &findFileNames)
 void Window::showMapFiles()
 {
 
+
     filesTable->clearContents();
     int rt = filesTable->rowCount();
     for (int i = rt ; i >= 0; i--) filesTable->removeRow(i);
 
     QMapIterator<QString, qint64> fs(FileSize);
-//    QHashIterator<QString, qint64> fs(FileSize);
 
     while (fs.hasNext()) {
         fs.next();
@@ -495,27 +518,45 @@ void Window::showMapFiles()
         codecItem->setFlags(codecItem->flags() ^ Qt::ItemIsEditable);
 
         QTableWidgetItem *volumeItem1 = new QTableWidgetItem( FileVolume1[fs.key()] );
-//        volumeItem1->setData(absoluteFileNameRole, QVariant(fs.key()));
         volumeItem1->setToolTip(toolTip);
         volumeItem1->setTextAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
         volumeItem1->setFlags(volumeItem1->flags() ^ Qt::ItemIsEditable);
+        if ( colorText < 100 ) {
+            volumeItem1->setBackground(QColor(QColorConstants::Svg::aqua));
+        } else {
+            volumeItem1->setBackground(QColor(QColorConstants::Svg::blue));
+        }
 
         QTableWidgetItem *checkItem1 = new QTableWidgetItem( Qt::CheckStateRole );
         checkItem1->setToolTip(tTC);
+        if ( colorText < 100 ) {
+            checkItem1->setBackground(QColor(QColorConstants::Svg::aqua));
+        } else {
+            checkItem1->setBackground(QColor(QColorConstants::Svg::blue));
+        }
         if ( FileVolume1[fs.key()] == "-.-" ) {
             checkItem1->setCheckState(Qt::Unchecked);
         } else {
             checkItem1->setCheckState(Qt::Checked);
         }
 
-
         QTableWidgetItem *volumeItem2 = new QTableWidgetItem( FileVolume2[fs.key()] );
         volumeItem2->setToolTip(toolTip);
         volumeItem2->setTextAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
         volumeItem2->setFlags(volumeItem2->flags() ^ Qt::ItemIsEditable);
+        if ( colorText < 100 ) {
+            volumeItem2->setBackground(QColor(QColorConstants::Svg::bisque));
+        } else {
+            volumeItem2->setBackground(QColor(QColorConstants::Svg::blueviolet));
+        }
 
         QTableWidgetItem *checkItem2 = new QTableWidgetItem( Qt::CheckStateRole );
         checkItem2->setToolTip(tTC);
+        if ( colorText < 100 ) {
+            checkItem2->setBackground(QColor(QColorConstants::Svg::bisque));
+        } else {
+            checkItem2->setBackground(QColor(QColorConstants::Svg::blueviolet));
+        }
         if ( FileVolume2[fs.key()] == "-.-" ) {
             checkItem2->setCheckState(Qt::Unchecked);
         } else {
@@ -526,9 +567,19 @@ void Window::showMapFiles()
         volumeItem3->setToolTip(toolTip);
         volumeItem3->setTextAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
         volumeItem3->setFlags(volumeItem3->flags() ^ Qt::ItemIsEditable);
+        if ( colorText < 100 ) {
+            volumeItem3->setBackground(QColor(QColorConstants::Svg::palegreen));
+        } else {
+            volumeItem3->setBackground(QColor(QColorConstants::Svg::darkgreen));
+        }
 
         QTableWidgetItem *checkItem3 = new QTableWidgetItem( Qt::CheckStateRole );
         checkItem3->setToolTip(tTC);
+        if ( colorText < 100 ) {
+            checkItem3->setBackground(QColor(QColorConstants::Svg::palegreen));
+        } else {
+            checkItem3->setBackground(QColor(QColorConstants::Svg::darkgreen));
+        }
         if ( FileVolume3[fs.key()] == "-.-" ) {
             checkItem3->setCheckState(Qt::Unchecked);
         } else {
@@ -572,6 +623,7 @@ void Window::createFilesTable()
     filesTable->verticalHeader()->hide();
     filesTable->setShowGrid(false);
     filesTable->setEditTriggers(QAbstractItemView::NoEditTriggers);
+
 
     filesTable->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(filesTable, &QTableWidget::customContextMenuRequested,

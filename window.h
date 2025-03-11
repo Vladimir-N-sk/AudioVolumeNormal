@@ -124,6 +124,7 @@ private:
     QDir currentDir;
 
     bool stop;
+    int colorText;
 };
 
 #endif

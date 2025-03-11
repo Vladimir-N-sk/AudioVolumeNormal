@@ -50,6 +50,18 @@ int main(int argc, char *argv[])
     qDebug() << "Default font size:"<<f.pointSize();
     qDebug() << "Set font size 12";
 
+//    qDebug() << "palette.name QPalette::Text:" << QApplication::palette().color(QPalette::Active, QPalette::Text).name();
+//    qDebug() << "palette.name QPalette::WindowText:" << QApplication::palette().color(QPalette::Active, QPalette::WindowText).name();
+//    qDebug() << "palette.value QPalette::Text:" << QApplication::palette().color(QPalette::Active, QPalette::Text).value();
+//    qDebug() << "palette.value QPalette::WindowText:" << QApplication::palette().color(QPalette::Active, QPalette::WindowText).value();
+
+
+//Debug: 10:19:47.270 palette QPalette::Text: "#1f1c1b" ()
+//Debug: 10:19:47.270 palette QPalette::WindowText: "#221f1e" ()
+//Debug: 11:02:21.485 palette.value QPalette::Text: 31 ()
+//Debug: 11:02:21.485 palette.value QPalette::WindowText: 34 ()
+
+
     f.setPointSize(12);
     app.setFont(f);
 
