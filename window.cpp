@@ -173,11 +173,11 @@ void Window::work()
 
                 audio->audio_level(vyborFilesList[i] );
 
-                qDebug()<< "File: " << vyborFilesList[i];
-                qDebug()<< "Volume audio1: " << FileVolume1.value(vyborFilesList[i]);
-                qDebug()<< "Volume audio2: " << FileVolume2.value(vyborFilesList[i]);
-                qDebug()<< "Volume audio3: " << FileVolume3.value(vyborFilesList[i]);
-                qDebug()<< "Codec: " << FileCodec.value(vyborFilesList[i]);
+                qInfo()<< "File: " << vyborFilesList[i];
+                qInfo()<< "Volume audio1: " << FileVolume1.value(vyborFilesList[i]);
+                qInfo()<< "Volume audio2: " << FileVolume2.value(vyborFilesList[i]);
+                qInfo()<< "Volume audio3: " << FileVolume3.value(vyborFilesList[i]);
+                qInfo()<< "Codec: " << FileCodec.value(vyborFilesList[i]);
             }
             pbD->hide();
         }
@@ -227,9 +227,9 @@ void Window::work()
                     }
                 }
 
-                if ( FileCheck1.value(inFile) ) qDebug() << "FileCheck1 is checked.";
-                if ( FileCheck2.value(inFile) ) qDebug() << "FileCheck2 is checked.";
-                if ( FileCheck3.value(inFile) ) qDebug() << "FileCheck3 is checked.";
+//                if ( FileCheck1.value(inFile) ) qDebug() << "FileCheck1 is checked.";
+//                if ( FileCheck2.value(inFile) ) qDebug() << "FileCheck2 is checked.";
+//                if ( FileCheck3.value(inFile) ) qDebug() << "FileCheck3 is checked.";
 
                 if ( FileVolume1.value(inFile) == "-.-" ) {
 
@@ -242,11 +242,11 @@ void Window::work()
 
                     showMapFiles();
 
-                    qDebug()<< "File: " << inFile;
-                    qDebug()<< "Volume audio1: " << FileVolume1.value(inFile);
-                    qDebug()<< "Volume audio2: " << FileVolume2.value(inFile);
-                    qDebug()<< "Volume audio3: " << FileVolume3.value(inFile);
-                    qDebug()<< "Codec: " << FileCodec.value(inFile);
+                    qInfo()<< "File: " << inFile;
+                    qInfo()<< "Volume audio1: " << FileVolume1.value(inFile);
+                    qInfo()<< "Volume audio2: " << FileVolume2.value(inFile);
+                    qInfo()<< "Volume audio3: " << FileVolume3.value(inFile);
+                    qInfo()<< "Codec: " << FileCodec.value(inFile);
 
                     dDb1=dDb2=dDb3=max=0.0;
                     dDb1=FileVolume1.value(inFile).trimmed().toDouble(&ok);
@@ -291,14 +291,14 @@ void Window::work()
                         sb->showMessage(tr("Уровень аудио в файле ")
                                         +QDir::toNativeSeparators(currentDir.relativeFilePath(inFile))
                                         +tr(" не будет изменён.") );
-                        qDebug() << tr("Уровень аудио в файле ")
+                        qInfo() << tr("Уровень аудио в файле ")
                                  <<QDir::toNativeSeparators(currentDir.relativeFilePath(inFile))
                                 << tr(" не будет изменён.");
                         continue;
                     }
 
                     QString strDb="volume=" + QString::number(max)+"dB";
-                    qDebug()<< "Filter: " << strDb;
+//                    qDebug()<< "Filter: " << strDb;
 
                     QStringList list_args;
                     list_args<< "-y" << "-hide_banner"<< "-i" << inFile
@@ -311,35 +311,35 @@ void Window::work()
                     list_args<<"-af" << strDb <<"-c:s"<< "copy"<<"-c:v"<< "copy"
                             <<"-strict"<< "experimental" <<avnFile;
 
-                    qDebug() << "Process arguments:";
-                    for (const QString &str : list_args) {
-                        qDebug() << str;
-                    }
+//                    qDebug() << "Process arguments:";
+//                    for (const QString &str : list_args) {
+//                        qDebug() << str;
+//                    }
 
                     sb->showMessage(tr("Изменяем уровень аудио в файле: ")+avnFile );
                     audio->set_audio_level( list_args );
 
                 } else {
 
-                    qDebug()<< "File: " << inFile;
-                    qDebug()<< "Volume audio1: " << FileVolume1.value(inFile);
-                    qDebug()<< "Volume audio2: " << FileVolume2.value(inFile);
-                    qDebug()<< "Volume audio3: " << FileVolume3.value(inFile);
-                    qDebug()<< "Codec: " << FileCodec.value(inFile);
+                    qInfo()<< "File: " << inFile;
+                    qInfo()<< "Volume audio1: " << FileVolume1.value(inFile);
+                    qInfo()<< "Volume audio2: " << FileVolume2.value(inFile);
+                    qInfo()<< "Volume audio3: " << FileVolume3.value(inFile);
+                    qInfo()<< "Codec: " << FileCodec.value(inFile);
 
                     dDb1=dDb2=dDb3=max=0.0;
                     if ( FileCheck1.value(inFile) ) {
-                        qDebug() << "Audio 1 is checked.";
+                        qInfo() << "Audio 1 is checked.";
                         dDb1=FileVolume1.value(inFile).trimmed().toDouble(&ok);
                         if (!ok) qDebug()<< "Audio1 value Conversion double ERROR! Value:" << FileVolume1.value(inFile);
                     }
                     if ( FileCheck2.value(inFile) ){
-                        qDebug() << "Audio 2 is checked.";
+                        qInfo() << "Audio 2 is checked.";
                         dDb2=FileVolume2.value(inFile).trimmed().toDouble(&ok);
                         if (!ok) qDebug()<< "Audio2 value Conversion double ERROR! Value:" << FileVolume2.value(inFile);
                     }
                     if ( FileCheck3.value(inFile) ) {
-                        qDebug() << "Audio 3 is checked.";
+                        qInfo() << "Audio 3 is checked.";
                         dDb3=FileVolume3.value(inFile).trimmed().toDouble(&ok);
                         if (!ok) qDebug()<< "Audio3 value Conversion double ERROR! Value:" << FileVolume3.value(inFile);
                     }
@@ -372,13 +372,13 @@ void Window::work()
                     if ( max<1) {
                         sb->showMessage(tr("Уровень аудио в файле ")+
                                         QDir::toNativeSeparators(currentDir.relativeFilePath(inFile)) + tr(" не будет изменён.") );
-                        qDebug() << tr("Уровень аудио в файле ")
+                        qInfo() << tr("Уровень аудио в файле ")
                                  <<QDir::toNativeSeparators(currentDir.relativeFilePath(inFile)) << tr(" не будет изменён.");
                         continue;
                     }
 
                     QString strDb="volume=" + QString::number(max)+"dB";
-                    qDebug()<< "Filter: " << strDb;
+//                    qDebug()<< "Filter: " << strDb;
 
                     QStringList list_args;
                     list_args<< "-y" << "-hide_banner"<< "-i" << inFile
@@ -391,12 +391,10 @@ void Window::work()
                     list_args<<"-af" << strDb <<"-c:s"<< "copy"<<"-c:v"<< "copy"
                             <<"-strict"<< "experimental" <<avnFile;
 
-                    qDebug() << "Process arguments:";
-                    for (const QString &str : list_args) {
-                        qDebug() << str;
-                    }
-
-//exit(0);
+//                    qDebug() << "Process arguments:";
+//                    for (const QString &str : list_args) {
+//                        qDebug() << str;
+//                    }
 
                     sb->showMessage(tr("Изменяем уровень аудио в файле: ")+avnFile );
 

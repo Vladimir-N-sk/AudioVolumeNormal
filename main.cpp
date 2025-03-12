@@ -39,16 +39,16 @@ int main(int argc, char *argv[])
     QFont f = app.font();
 
     QString logfilePath = QCoreApplication::applicationDirPath()+"/AVN.log";
-    qDebug() << "See log file " + logfilePath;
+    qInfo() << "See log file " + logfilePath;
     QFile outFile(logfilePath);
     outFile.open(QIODevice::WriteOnly | QIODevice::Truncate);
     output_ts.setDevice(&outFile);
     qInstallMessageHandler(myMessageHandler);
 
-    qDebug() << "Audio Volume Normal start";
-    qDebug() << "SysInfo: "<< QSysInfo::prettyProductName() << " " << QSysInfo::currentCpuArchitecture();
-    qDebug() << "Default font size:"<<f.pointSize();
-    qDebug() << "Set font size 12";
+    qInfo() << "Audio Volume Normal start";
+    qInfo() << "SysInfo: "<< QSysInfo::prettyProductName() << " " << QSysInfo::currentCpuArchitecture();
+    qInfo() << "Default font size:"<<f.pointSize();
+    qInfo() << "Set font size 12";
 
     f.setPointSize(12);
     app.setFont(f);
