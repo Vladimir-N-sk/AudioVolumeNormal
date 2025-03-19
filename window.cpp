@@ -733,10 +733,20 @@ void Window::contextMenu(const QPoint &pos)
 
 void Window::browse()
 {
+//    QString directory =
+//        QDir::toNativeSeparators(QFileDialog::getExistingDirectory(this,
+//                                 tr("Выбрать папку"),
+//                                 QDir::currentPath() ));
+
     QString directory =
-        QDir::toNativeSeparators(QFileDialog::getExistingDirectory(this,
-                                 tr("Выбрать папку"),
-                                 QDir::currentPath() ));
+            QDir::toNativeSeparators(
+                QFileInfo(
+                    QFileDialog::getOpenFileName(this,
+                                                 tr("Выбрать файл"),
+                                                 QDir::currentPath(),
+                                                 tr("*.avi *.mkv *.mp4 *.ts"))
+                    ).canonicalPath()
+                );
 
     if (!directory.isEmpty()) {
         if (directoryComboBox->findText(directory) == -1)
