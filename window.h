@@ -21,6 +21,7 @@
 #include <QTime>
 #include <QFile>
 #include <QSysInfo>
+#include <QIcon>
 
 #include "audio.h"
 #include "pbdialog.h"

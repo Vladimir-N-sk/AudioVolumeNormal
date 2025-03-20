@@ -1,7 +1,7 @@
 TEMPLATE = app
 TARGET = AudioVolumeNormal
 
-QT += widgets core gui
+QT += widgets core gui svg
 
 #QTPLUGIN.platforms = qminimal qxcb linuxfb
 QTPLUGIN.platforms = qminimal qxcb

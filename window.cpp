@@ -91,7 +91,7 @@ Window::Window(QWidget *parent)
         gb->setStyleSheet("color: black;" "background-color: #B6B6B6;" );
 
     rb1 = new QRadioButton(tr("Узнать уровень аудио"), gb);
-    rb2 = new QRadioButton(tr("Поменять уровень аудио"), gb);
+    rb2 = new QRadioButton(tr("Изменить уровень аудио"), gb);
     rb1->setChecked(true);
     rb1->setDisabled(true);
     rb2->setDisabled(true);
