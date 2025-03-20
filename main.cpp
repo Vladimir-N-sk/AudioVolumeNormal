@@ -59,7 +59,8 @@ int main(int argc, char *argv[])
     QCoreApplication::setOrganizationDomain("alvladnik@gmail.com");
     Window AudioWin;
 
-    AudioWin.setWindowIcon(QIcon("avn.svg"));
+//    AudioWin.setWindowIcon(QIcon("avn.svg"));
+    AudioWin.setWindowIcon(QIcon(  QString(QCoreApplication::applicationDirPath()+"/lib/avn.svg") ));
 
      AudioWin.setMinimumSize(1280, 720);
 //     AudioWin.setMinimumSize(640,480);
