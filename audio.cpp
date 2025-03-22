@@ -5,7 +5,7 @@
 void Audio::set_audio_level(QStringList process_args )
 {
 
-    qDebug() <<"Start SET_AUDIO_LEVEL";
+    qInfo() <<"Start SET_AUDIO_LEVEL";
 
     int msecDurTime=1, msecFrameTime=0;
     stop = false;
@@ -29,18 +29,13 @@ void Audio::set_audio_level(QStringList process_args )
 
     process->start( (dirFFmpeg+"/libffmpeg"), process_args);
 
-//    qDebug() << "Process arguments:";
-//    for (const QString &str : process_args) {
-//        qDebug() << str;
-//    }
-
-
     if( !process->waitForStarted(1000) ) {
         qDebug() <<"ERROR START SET_AUDIO_LEVEL args: "<<(dirFFmpeg+"/libffmpeg");
-        //                    << "-y"<< "-hide_banner" << "-i" << fileNameIn <<"-map"<< "0:v"<< "-c:v"<< "copy"<< "-map"<< "0:a:0"<< "-c:a"<< codec
-        //                    <<"-map"<< "0:a:1?"<< "-c:a"<< codec<< "-map"<< "0:a:2?"<< "-c:a"<< codec
-        //                    <<"-af" << strDb <<"-c:s"<< "copy"<<"-c:v"<< "copy" <<"-strict"<< "experimental"<<fileNameOut;
+        qDebug() << process_args;
         return;
+    } else {
+        qInfo() <<"START SET_AUDIO_LEVEL args: "<<(dirFFmpeg+"/libffmpeg");
+        qInfo() << process_args;
     }
 
     emit set_pS(msecFrameTime*100/msecDurTime);
@@ -80,14 +75,15 @@ void Audio::set_audio_level(QStringList process_args )
     process->close();
     delete process;
     emit set_pS(100);
-    qDebug() << "SET_AUDIO_LEVEL END process!";
+    qInfo() << "End SET_AUDIO_LEVEL";
 }
 
 
 void Audio::audio_level(QString fileName )
 {
 
-    int msecDurTime=1, msecFrameTime=0, streamAudio=0, kodek=0;
+    qInfo() << "Start AUDIO_LEVEL";
+    int msecDurTime=1, streamAudio=0, kodek=0;
     int mFT[] {0,0,0};
     stop = false;
 
@@ -130,7 +126,7 @@ void Audio::audio_level(QString fileName )
     //больше 3-х (0,1,2) потоков не обрабатываем
         if (streamAudio>3) streamAudio=3;
 
-    qDebug()<< "Count Audio stream:" << streamAudio;
+    qInfo()<< "Count Audio stream:" << streamAudio;
 
     //Опрос аудио потоков
 
@@ -155,11 +151,11 @@ void Audio::audio_level(QString fileName )
             return;
         }
 
-//        qDebug() <<"START AUDIO_LEVEL args: "<<(dirFFmpeg+"/libffmpeg")
-//                << " -hide_banner " << " -i " << fileName
-//                << "-map" << ann
-//                <<" -af " << filter_vol_detect
-//                <<" -vn "<< " -sn "<< " -dn "<<" -f " << " null " << " /dev/null";
+        qDebug() <<"START AUDIO_LEVEL args: "<<(dirFFmpeg+"/libffmpeg")
+                << " -hide_banner " << " -i " << fileName
+                << "-map" << ann
+                <<" -af " << filter_vol_detect
+                <<" -vn "<< " -sn "<< " -dn "<<" -f " << " null " << " /dev/null";
 
         emit set_pD( ((mFT[0]+mFT[1]+mFT[2])*100)/(msecDurTime*streamAudio) );
         QCoreApplication::processEvents();
@@ -226,7 +222,7 @@ void Audio::audio_level(QString fileName )
         }               // rocess->waitForReadyRead
     }//end for
     emit set_pD(100);
-    qDebug() << "AUDIO_LEVEL End process.";
+    qInfo() << "End AUDIO_LEVEL";
     process->close();
     delete process;
 }

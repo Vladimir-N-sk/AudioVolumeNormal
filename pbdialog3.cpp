@@ -41,5 +41,5 @@ void pbDialog3::lbAll_setText(QString num)
 
 void pbDialog3::lbChange_setText(QString txt)
 {
-    ui->lbChange->setText(QString(tr("Изменение в файле: "))+txt );
+    ui->lbChange->setText(QString(tr("Создаем файл: "))+txt );
 }

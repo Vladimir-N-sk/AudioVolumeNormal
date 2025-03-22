@@ -52,12 +52,6 @@ friend class Audio;
 
 protected:
     QMap<QString, qint64> FileSize;
-//    QMap<QString, QString> FileVolume1;
-//    QMap<QString, QString> FileVolume2;
-//    QMap<QString, QString> FileVolume3;
-//    QMap<QString, QString> FileCodec;
-
-//    QHash<QString, qint64> FileSize;
     QHash<QString, QString> FileCodec;
     QHash<QString, QString> FileVolume1;
     QHash<QString, QString> FileVolume2;
@@ -68,13 +62,13 @@ protected:
     QHash<QString, bool> FileCheck3;
 
 
-
     QString strMaxVolume;
     QList<QTableWidgetItem *> listItem;
 
 signals:
 void send_stop_pD();
 void send_file_name(QString);
+void send_file_avn_name(QString);
 void send_file_count(QString);
 void send_file_percent(int);
 
