@@ -13,6 +13,10 @@
   <property name="windowTitle">
    <string>Вычисляем и изменяем уровень аудио</string>
   </property>
+  <property name="windowIcon">
+   <iconset>
+    <normaloff>avn/lib/avn.svg</normaloff>avn/lib/avn.svg</iconset>
+  </property>
   <property name="statusTip">
    <string>Выполняется</string>
   </property>
