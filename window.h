@@ -53,14 +53,18 @@ friend class Audio;
 protected:
     QMap<QString, qint64> FileSize;
     QHash<QString, QString> FileCodec;
+
     QHash<QString, QString> FileVolume1;
     QHash<QString, QString> FileVolume2;
     QHash<QString, QString> FileVolume3;
 
+    QHash<QString, QString> FileChannel1;
+    QHash<QString, QString> FileChannel2;
+    QHash<QString, QString> FileChannel3;
+
     QHash<QString, bool> FileCheck1;
     QHash<QString, bool> FileCheck2;
     QHash<QString, bool> FileCheck3;
-
 
     QString strMaxVolume;
     QList<QTableWidgetItem *> listItem;
@@ -77,6 +81,11 @@ void recv_max_vol1(QString, QString);
 void recv_max_vol2(QString, QString);
 void recv_max_vol3(QString, QString);
 void recv_codec(QString, QString);
+
+void recv_channel1(QString, QString);
+void recv_channel2(QString, QString);
+void recv_channel3(QString, QString);
+
 void recv_stop();
 
 private slots:

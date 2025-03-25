@@ -46,6 +46,9 @@ signals:
     void send_max_vol2(QString,QString);
     void send_max_vol3(QString,QString);
     void send_codec(QString,QString);
+    void send_channel1(QString,QString);
+    void send_channel2(QString,QString);
+    void send_channel3(QString,QString);
 
 protected:
     QProcess *process;

@@ -130,12 +130,12 @@ void Audio::audio_level(QString fileName )
 
     //Опрос аудио потоков
 
-    for (int nn=0; nn<streamAudio; nn++) {
+    for (int numberStreamAudio=0; numberStreamAudio<streamAudio; numberStreamAudio++) {
 
         QStringList list_args;
         list_args<< "-hide_banner" << "-i" << fileName;
 
-        QString ann="0:a:" + QString::number(nn);
+        QString ann="0:a:" + QString::number(numberStreamAudio);
         list_args << "-map" << ann;
 
         list_args<<"-af"<<filter_vol_detect<<"-vn"<< "-sn"<< "-dn"<<"-f"<< "null"<<"/dev/null";
@@ -177,7 +177,7 @@ void Audio::audio_level(QString fileName )
                     int tt=line.indexOf("bit",0)-(line.indexOf("time",0)+5) ;
                     QString tim = line.mid(line.indexOf("time",0)+5,tt);
                     QTime frameTime = QTime::fromString(tim);
-                    mFT[nn] = QTime(0, 0, 0).msecsTo(frameTime);
+                    mFT[numberStreamAudio] = QTime(0, 0, 0).msecsTo(frameTime);
                 } else if ( line.contains("Duration:") ){
                     if (msecDurTime == 1) {
                         int nn=line.indexOf(",",0)-(line.indexOf("Dur",0)+10) ;
@@ -190,30 +190,62 @@ void Audio::audio_level(QString fileName )
                     int mm=line.indexOf("dB",0)-(line.indexOf("max_vol",0)+11) ;
                     QString max = line.mid(line.indexOf("max_vol",0)+11 ,mm).trimmed();
 
-                    switch (nn) {
+                    switch (numberStreamAudio) {
                     case 0:
-//                        qDebug()<< "!!! send_max_vol1:"<< max;
                         emit send_max_vol1(fileName, max);
                         break;
                     case 1:
-//                        qDebug()<< "!!! send_max_vol2:"<< max;
                         emit send_max_vol2(fileName, max);
                         break;
                     case 2:
-//                        qDebug()<< "!!! send_max_vol3:"<< max;
                         emit send_max_vol3(fileName, max);
                         break;
                     default:
                         break;
                     }
                     QCoreApplication::processEvents();
-                } else if ( line.contains("Audio:") && kodek == 0  ) {
-                    kodek++;
-                    int aa=line.indexOf("Audio:",0);
-                    int bb=line.indexOf(QRegExp("[^0-9a-z-A-Z]"), aa+8);
-                    int cc = bb-aa-7;
-                    QString cod = line.mid(aa+7,cc).trimmed();
-                    emit send_codec(fileName, cod);
+                } else if ( line.contains("Audio:") && (numberStreamAudio == 0) ) {
+                    if (kodek == 0) {
+                        kodek++;
+                        //Позиция (1) 'A'udio от начала строки
+                        int aa=line.indexOf("Audio:",0);
+                        //Позиция (2) любого не буквы и цифры от 'А' + 8
+                        int bb=line.indexOf(QRegExp("[^0-9a-z-A-Z]"), aa+8);
+                        //Длинна подстроки cc=(2)-(1)-('Audio: ')
+                        int cc = bb-aa-7;
+                        QString cod = line.mid(aa+7,cc).trimmed();
+                        emit send_codec(fileName, cod);
+                        QCoreApplication::processEvents();
+                    }
+
+                    qDebug()<< "-----Line from ffmpeg:" << line;
+
+                    if(numberStreamAudio == 0){
+
+                        int z1=line.indexOf(QChar(','), (line.indexOf(QChar(','),0))+1 );
+                        int z2=line.indexOf(QChar(','), z1+1 );
+                        QString channel = line.mid( (z1+1),(z2-z1-1) ).trimmed();
+
+                        z1=line.mid( (line.indexOf(QChar(':'),0))+1,1).toInt();
+
+//                        qDebug() << "***Audio Channel:" << channel;
+                        switch (z1) {
+                        case 1:
+                            qDebug() << "*****Number Audio Channel:"<<z1 <<" format:" << channel;
+                            emit send_channel1(fileName, channel);
+                            break;
+                        case 2:
+                            qDebug() << "*****Number Audio Channel:"<<z1 <<" format:" << channel;
+                            emit send_channel2(fileName, channel);
+                            break;
+                        case 3:
+                            qDebug() << "*****Number Audio Channel:"<<z1 <<" format:" << channel;
+                            emit send_channel3(fileName, channel);
+                            break;
+                        default:
+                            break;
+                        }
+                    }
                     QCoreApplication::processEvents();
                 }
                 emit set_pD( ((mFT[0]+mFT[1]+mFT[2])*100)/(msecDurTime*streamAudio) );

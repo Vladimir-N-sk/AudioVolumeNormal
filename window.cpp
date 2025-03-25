@@ -108,6 +108,9 @@ Window::Window(QWidget *parent)
     connect(audio,&Audio::send_max_vol2, this, &Window::recv_max_vol2 );
     connect(audio,&Audio::send_max_vol3, this, &Window::recv_max_vol3 );
     connect(audio,&Audio::send_codec, this, &Window::recv_codec );
+    connect(audio,&Audio::send_channel1, this, &Window::recv_channel1 );
+    connect(audio,&Audio::send_channel2, this, &Window::recv_channel2 );
+    connect(audio,&Audio::send_channel3, this, &Window::recv_channel3 );
 
     pbD = new pbDialog();
     connect(audio,&Audio::set_pD, pbD, &pbDialog::pBarAudio_valueChanged );
@@ -474,12 +477,18 @@ void Window::createMapFiles(const QStringList &findFileNames)
     FileVolume2.clear();
     FileVolume3.clear();
     FileCodec.clear();
+    FileChannel1.clear();
+    FileChannel2.clear();
+    FileChannel3.clear();
     for (const QString &filePathName : findFileNames) {
         FileSize.insert(filePathName, QFileInfo(filePathName).size());
         FileVolume1.insert(filePathName, "-.-");
         FileVolume2.insert(filePathName, "-.-");
         FileVolume3.insert(filePathName, "-.-");
         FileCodec.insert(filePathName, "---");
+        FileChannel1.insert(filePathName, "---");
+        FileChannel2.insert(filePathName, "---");
+        FileChannel3.insert(filePathName, "---");
     }
 }
 
@@ -516,6 +525,24 @@ void Window::showMapFiles()
         codecItem->setToolTip(toolTip);
         codecItem->setTextAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
         codecItem->setFlags(codecItem->flags() ^ Qt::ItemIsEditable);
+        if ( colorText < 100 ) {
+//            codecItem->setBackground(QColor(QColorConstants::Svg::lightsteelblue));
+            codecItem->setBackground(QColor(QColorConstants::Svg::lavender));
+        } else {
+            codecItem->setBackground(QColor(QColorConstants::Svg::lightslategrey));
+        }
+
+
+/**/
+        QTableWidgetItem *channelItem1 = new QTableWidgetItem( FileChannel1[fs.key()] );
+        channelItem1->setToolTip(toolTip);
+        channelItem1->setTextAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
+        channelItem1->setFlags(channelItem1->flags() ^ Qt::ItemIsEditable);
+        if ( colorText < 100 ) {
+            channelItem1->setBackground(QColor(QColorConstants::Svg::aqua));
+        } else {
+            channelItem1->setBackground(QColor(QColorConstants::Svg::blue));
+        }
 
         QTableWidgetItem *volumeItem1 = new QTableWidgetItem( FileVolume1[fs.key()] );
         volumeItem1->setToolTip(toolTip);
@@ -529,6 +556,7 @@ void Window::showMapFiles()
 
         QTableWidgetItem *checkItem1 = new QTableWidgetItem( Qt::CheckStateRole );
         checkItem1->setToolTip(tTC);
+        checkItem1->setSizeHint(QSize());
         if ( colorText < 100 ) {
             checkItem1->setBackground(QColor(QColorConstants::Svg::aqua));
         } else {
@@ -538,6 +566,17 @@ void Window::showMapFiles()
             checkItem1->setCheckState(Qt::Unchecked);
         } else {
             checkItem1->setCheckState(Qt::Checked);
+        }
+
+/**/
+        QTableWidgetItem *channelItem2 = new QTableWidgetItem( FileChannel2[fs.key()] );
+        channelItem2->setToolTip(toolTip);
+        channelItem2->setTextAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
+        channelItem2->setFlags(channelItem2->flags() ^ Qt::ItemIsEditable);
+        if ( colorText < 100 ) {
+            channelItem2->setBackground(QColor(QColorConstants::Svg::bisque));
+        } else {
+            channelItem2->setBackground(QColor(QColorConstants::Svg::blueviolet));
         }
 
         QTableWidgetItem *volumeItem2 = new QTableWidgetItem( FileVolume2[fs.key()] );
@@ -561,6 +600,18 @@ void Window::showMapFiles()
             checkItem2->setCheckState(Qt::Unchecked);
         } else {
             checkItem2->setCheckState(Qt::Checked);
+        }
+
+
+        /**/
+        QTableWidgetItem *channelItem3 = new QTableWidgetItem( FileChannel3[fs.key()] );
+        channelItem3->setToolTip(toolTip);
+        channelItem3->setTextAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
+        channelItem3->setFlags(channelItem3->flags() ^ Qt::ItemIsEditable);
+        if ( colorText < 100 ) {
+            channelItem3->setBackground(QColor(QColorConstants::Svg::palegreen));
+        } else {
+            channelItem3->setBackground(QColor(QColorConstants::Svg::darkgreen));
         }
 
         QTableWidgetItem *volumeItem3 = new QTableWidgetItem( FileVolume3[fs.key()] );
@@ -591,12 +642,15 @@ void Window::showMapFiles()
         filesTable->setItem(row, 0, fileNameItem);
         filesTable->setItem(row, 1, sizeItem);
         filesTable->setItem(row, 2, codecItem);
-        filesTable->setItem(row, 3, volumeItem1);
-        filesTable->setItem(row, 4, checkItem1);
-        filesTable->setItem(row, 5, volumeItem2);
-        filesTable->setItem(row, 6, checkItem2);
-        filesTable->setItem(row, 7, volumeItem3);
-        filesTable->setItem(row, 8, checkItem3);
+        filesTable->setItem(row, 3, channelItem1);
+        filesTable->setItem(row, 4, volumeItem1);
+        filesTable->setItem(row, 5, checkItem1);
+        filesTable->setItem(row, 6, channelItem2);
+        filesTable->setItem(row, 7, volumeItem2);
+        filesTable->setItem(row, 8, checkItem2);
+        filesTable->setItem(row, 9, channelItem3);
+        filesTable->setItem(row, 10, volumeItem3);
+        filesTable->setItem(row, 11, checkItem3);
     }
 }
 
@@ -612,14 +666,24 @@ QComboBox *Window::createComboBox(const QString &text)
 void Window::createFilesTable()
 {
 
-    filesTable = new QTableWidget(0, 9);
+    filesTable = new QTableWidget(0, 12);
     filesTable->setSelectionBehavior(QAbstractItemView::SelectRows);
 
     QStringList labels;
-    labels << tr("Файл") << tr("Размер")<< tr("Кодек")
-           << tr("Аудио1")<< tr("Выбор")<< tr("Аудио2")<< tr("Выбор")<< tr("Аудио3")<< tr("Выбор");
+//    labels << tr("Файл") << tr("Размер")<< tr("Кодек")
+//           << tr("Аудио1")<< tr("Выбор")<< tr("Аудио2")<< tr("Выбор")<< tr("Аудио3")<< tr("Выбор");
+
+    labels << tr("File") << tr("Size")<< tr("Codec")
+           << tr("Audio1")<< tr("Lvl1")<< tr("v")
+           << tr("Audio2")<< tr("Lvl2")<< tr("v")
+           << tr("Audio3")<< tr("Lvl3")<< tr("v");
+
     filesTable->setHorizontalHeaderLabels(labels);
     filesTable->horizontalHeader()->setSectionResizeMode(0, QHeaderView::Stretch);
+    for (int i=1; i<12;i++){
+        filesTable->horizontalHeader()->setSectionResizeMode(i, QHeaderView::ResizeToContents);
+    }
+
     filesTable->verticalHeader()->hide();
     filesTable->setShowGrid(false);
     filesTable->setEditTriggers(QAbstractItemView::NoEditTriggers);
@@ -663,18 +727,18 @@ void Window::work_list()
     listItem = filesTable->selectedItems();
 
     if (!listItem.isEmpty()) {
-    Q_ASSERT(listItem.count() % 9 == 0);
-        // прыгаем через 9 элементов, кол-во столбцов в строке
+    Q_ASSERT(listItem.count() % 12 == 0);
+        // прыгаем через 12 элементов, кол-во столбцов в строке
         vyborFilesList.clear();
         FileCheck1.clear();
         FileCheck2.clear();
         FileCheck3.clear();
-        for (int i=0; i<listItem.size() ;i+=9) {
+        for (int i=0; i<listItem.size() ;i+=12) {
             vyborFile=listItem.at(i)->data(absoluteFileNameRole).toString();
             vyborFilesList << vyborFile;
-            FileCheck1.insert(vyborFile, listItem.at(i+4)->checkState() );
-            FileCheck2.insert(vyborFile, listItem.at(i+6)->checkState() );
-            FileCheck3.insert(vyborFile, listItem.at(i+8)->checkState() );
+            FileCheck1.insert(vyborFile, listItem.at(i+5)->checkState() );
+            FileCheck2.insert(vyborFile, listItem.at(i+8)->checkState() );
+            FileCheck3.insert(vyborFile, listItem.at(i+11)->checkState() );
         }
         work();
         showMapFiles();
@@ -758,6 +822,9 @@ void Window::browse()
         FileVolume1.clear();
         FileVolume2.clear();
         FileVolume3.clear();
+        FileChannel1.clear();
+        FileChannel2.clear();
+        FileChannel3.clear();
         FileCodec.clear();
         workButton->hide();
         sb->showMessage(tr("Для начала работы нажмите <Найти файлы>"));
@@ -778,6 +845,17 @@ void Window::recv_max_vol3(QString fName, QString strMVol){
 void Window::recv_codec(QString fName, QString strCodec){
     FileCodec.insert(fName, strCodec);
 }
+
+void Window::recv_channel1(QString fName, QString strChannel){
+    FileChannel1.insert(fName, strChannel);
+}
+void Window::recv_channel2(QString fName, QString strChannel){
+    FileChannel2.insert(fName, strChannel);
+}
+void Window::recv_channel3(QString fName, QString strChannel){
+    FileChannel3.insert(fName, strChannel);
+}
+
 
 void Window::recv_stop(){
     stop = true;
