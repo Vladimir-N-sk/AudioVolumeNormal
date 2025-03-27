@@ -65,8 +65,9 @@ void Audio::set_audio_level(QStringList process_args )
                 QTime durTime = QTime::fromString(dur);
                 msecDurTime = QTime(0, 0, 0).msecsTo(durTime);
 
-            } else if (line.contains("max_volume:")) {
             }
+//            else if (line.contains("max_volume:")) {
+//            }
             emit set_pS(msecFrameTime*100/msecDurTime);
             QCoreApplication::processEvents();
         }           //process->canReadLine

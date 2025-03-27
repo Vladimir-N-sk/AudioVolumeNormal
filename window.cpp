@@ -19,7 +19,7 @@ static inline void openFile(const QString &fileName)
 Window::Window(QWidget *parent)
     : QWidget(parent)
 {
-    setWindowTitle(tr("Audio Volume Normal v.2.2"));
+    setWindowTitle(tr("Audio Volume Normal v.3.0"));
 
     const QIcon folderIcon = QIcon::fromTheme("folder-cyan");
 
@@ -90,16 +90,19 @@ Window::Window(QWidget *parent)
     //фон светло-серый
         gb->setStyleSheet("color: black;" "background-color: #B6B6B6;" );
 
-    rb1 = new QRadioButton(tr("Узнать уровень аудио"), gb);
+    rb1 = new QRadioButton(tr("Узнать данные аудио"), gb);
     rb2 = new QRadioButton(tr("Изменить уровень аудио"), gb);
+    rb3 = new QRadioButton(tr("Изменить формат 5.1 в stereo"), gb);
     rb1->setChecked(true);
     rb1->setDisabled(true);
     rb2->setDisabled(true);
+    rb3->setDisabled(true);
 
     // Менеджер размещения для радиокнопок:
     QHBoxLayout *hbl = new QHBoxLayout();
     hbl->addWidget(rb1, 0);
     hbl->addWidget(rb2, 0);
+    hbl->addWidget(rb3, 0);
     gb->setLayout(hbl);
     mainLayout->addWidget(gb, 4, 0, 1, 2);
 
@@ -141,7 +144,7 @@ void Window::work()
 
     if ( vyborFilesList.isEmpty() ){
         QMessageBox::information(this, tr("Выбран файл"),
-                                 tr("<h2>Внимание!</h2>\n"
+                                 tr("<h2 align=\"center\">Внимание!</h2>\n"
                                     "Ни один файл не выбран."),
                                  QMessageBox::Ok, QMessageBox::NoButton);
     } else {
@@ -408,6 +411,115 @@ void Window::work()
             }
             pbD3->hide();
         }
+
+
+/****** rb3   ****************************************************************************/
+
+        if ( rb3->isChecked()){
+//            bool ok;
+            stop = false;
+
+            pbD3->show();
+            for (int i = 0; i < vyborFilesList.size(); ++i) {
+
+                if (stop) {
+                    sb->showMessage(tr("Процесс прерван."));
+                    break;
+                }
+
+                // Посылаем на форму %% обработанных файлов
+                emit send_file_percent(i*100/vyborFilesList.size());
+
+                // Посылаем на форму NN обработанных файлов
+                emit send_file_count(QString::number(i));
+
+                QString inFile = vyborFilesList[i];
+
+                QString avnFile = QFileInfo(inFile).canonicalPath() +
+                        "/5t2_" + QFileInfo(inFile).fileName();
+
+                // Посылаем на форму имя создаваемого файла
+//                emit send_file_avn_name( avnFile );
+                emit send_file_avn_name( QString("5t2_" + QFileInfo(inFile).fileName()) );
+
+                QFile testFile(avnFile);
+                if (  !(testFile.open(QIODevice::WriteOnly | QIODevice::Truncate)) ) {
+                    qDebug()<< "Not open output file: " << avnFile;
+                    QMessageBox::critical(this, tr("Предупреждение"), tr("<h2>Внимание</h2>\n"
+                                                                         "Что-то пошло не так!\n"
+                                                                         "Не удалось создать тестовый файл."),
+                                          QMessageBox::Ok, QMessageBox::NoButton);
+                }
+                testFile.close();
+
+                if ( QFile::exists(avnFile) ) {
+                    sb->showMessage(tr("Удаляем старую копию ")+avnFile );
+                    if ( !QFile::remove(avnFile)) {
+                        QMessageBox::critical(this, tr("Выбран файл"), tr("<h2>Внимание!</h2>\n"
+                                                                          "Не удалось удалить старую копию файла"),
+                                              QMessageBox::Ok, QMessageBox::NoButton);
+                    }
+                }
+
+                if ( FileCodec.value(inFile) == "---" ) {
+
+                    sb->showMessage(tr("ВНИМАНИЕ! Для файла ")+
+                     QDir::toNativeSeparators(currentDir.relativeFilePath(inFile)) + tr(" нет исходных аудио данных.") );
+
+
+                    QMessageBox::information(this, tr("Изменение формата"),
+                                             tr("<h2 align=\"center\">Внимание!</h2>\n"
+                                                "<p align=\"center\">Для изменения формата аудио необходимо"
+                                                "<p align=\"center\">сначала узнать данные аудио"
+                                                "<p align=\"center\">исходного файла."
+                                                ),
+                                             QMessageBox::Ok, QMessageBox::NoButton);
+
+                } else {
+
+                    qInfo()<< "File: " << inFile;
+                    if ( FileCheck1.value(inFile) ) qInfo() << "Audio 1 is checked.";
+                    if ( FileCheck2.value(inFile) ) qInfo() << "Audio 2 is checked.";
+                    if ( FileCheck3.value(inFile) ) qInfo() << "Audio 3 is checked.";
+
+                    qInfo()<< "Channel audio1: " << FileChannel1.value(inFile);
+                    qInfo()<< "Channel audio2: " << FileChannel2.value(inFile);
+                    qInfo()<< "Channel audio3: " << FileChannel3.value(inFile);
+                    qInfo()<< "Codec: " << FileCodec.value(inFile);
+
+                    if ( !FileCheck1.value(inFile) && !FileCheck2.value(inFile) && !FileCheck3.value(inFile)) {
+                        qDebug() << tr("ВНИМАНИЕ! Для файла ")
+                                 <<QDir::toNativeSeparators(currentDir.relativeFilePath(inFile)) << tr(" не был выбран ни один аудио поток.");
+                        sb->showMessage(tr("ВНИМАНИЕ! Для файла ")+
+                                        QDir::toNativeSeparators(currentDir.relativeFilePath(inFile)) + tr(" не был выбран ни один аудио поток.") );
+                        continue;
+                    }
+
+                    QStringList list_args;
+
+                    list_args<< "-y" << "-hide_banner"<< "-i" << inFile
+                             <<"-map"<< "0:v:0"<< "-c:v"<< "copy";
+
+
+                    if (FileCheck1.value(inFile)) list_args<< "-map"<< "0:a:0"<<"-ac"<< "2"<<"-c:a"<< FileCodec.value(inFile);
+                    if (FileCheck2.value(inFile)) list_args<< "-map"<< "0:a:1"<<"-ac"<< "2"<< "-c:a"<< FileCodec.value(inFile);
+                    if (FileCheck3.value(inFile)) list_args<< "-map"<< "0:a:2"<<"-ac"<< "2"<< "-c:a"<< FileCodec.value(inFile);
+                    list_args <<"-map"<<"0:s"<<"-c:s"<< "copy" <<avnFile;
+                    sb->showMessage(tr("Изменяем формат аудио в файле: ")+avnFile );
+
+//                    qDebug() << "Process arguments:";
+//                    for (const QString &str : list_args) {
+//                        qDebug() << str;
+//                    }
+
+                    audio->set_audio_level( list_args );
+                } // end else
+            }
+            pbD3->hide();
+        }  // end rb3-checked
+
+
+
     }  // vyborFilesList.isEmpty()
     //    }  // for
 }
@@ -439,6 +551,7 @@ void Window::find()
     if (!findFilesList.isEmpty()) {
         rb1->setDisabled(false);
         rb2->setDisabled(false);
+        rb3->setDisabled(false);
         createMapFiles(findFilesList);
         showMapFiles();
         workButton->setVisible(true);
@@ -460,12 +573,13 @@ void Window::find()
         workButton->hide();
         rb1->setDisabled(true);
         rb2->setDisabled(true);
+        rb3->setDisabled(true);
         findFilesList.clear();
         vyborFile.clear();
         QMessageBox::information(this, tr("Поиск фалов"),
                                  tr("<h2>Упс!</h2>\n"
-                                    "<p>В выбранной папке ни один медиафайл не найден."
-                                    "<p>Попробуйте в другой папке."),
+                                    "<p align=\"center\">В выбранной папке ни один медиафайл не найден."
+                                    "<p align=\"center\">Попробуйте в другой папке."),
                                  QMessageBox::Ok, QMessageBox::NoButton);
     }
 }
@@ -495,7 +609,6 @@ void Window::createMapFiles(const QStringList &findFileNames)
 void Window::showMapFiles()
 {
 
-
     filesTable->clearContents();
     int rt = filesTable->rowCount();
     for (int i = rt ; i >= 0; i--) filesTable->removeRow(i);
@@ -505,7 +618,7 @@ void Window::showMapFiles()
     while (fs.hasNext()) {
         fs.next();
         const QString toolTip = "Двойной клик и начнется выполнение задания над этим файлом.";
-        const QString tTC = "Выбор обрабатывать или не обрабатывать этот аудио поток";
+        const QString tTC = "Включить или не включить этот аудиопоток в выходной файл";
         const QString relativePath = QDir::toNativeSeparators(currentDir.relativeFilePath(fs.key()));
         const qint64 size = QFileInfo(fs.key()).size();
 
@@ -673,13 +786,28 @@ void Window::createFilesTable()
 //    labels << tr("Файл") << tr("Размер")<< tr("Кодек")
 //           << tr("Аудио1")<< tr("Выбор")<< tr("Аудио2")<< tr("Выбор")<< tr("Аудио3")<< tr("Выбор");
 
-    labels << tr("File") << tr("Size")<< tr("Codec")
-           << tr("Audio1")<< tr("Lvl1")<< tr("v")
-           << tr("Audio2")<< tr("Lvl2")<< tr("v")
-           << tr("Audio3")<< tr("Lvl3")<< tr("v");
+    labels << tr("File") << tr(" Size ")<< tr(" Codec ")
+           << tr(" Audio1 ")<< tr(" Lvl1 ")<< tr("v")
+           << tr(" Audio2 ")<< tr(" Lvl2 ")<< tr("v")
+           << tr(" Audio3 ")<< tr(" Lvl3 ")<< tr("v");
 
     filesTable->setHorizontalHeaderLabels(labels);
+
     filesTable->horizontalHeader()->setSectionResizeMode(0, QHeaderView::Stretch);
+
+//    filesTable->horizontalHeader()->setSectionResizeMode(1, QHeaderView::Stretch);
+//    filesTable->horizontalHeader()->setSectionResizeMode(2, QHeaderView::Stretch);
+//    filesTable->horizontalHeader()->setSectionResizeMode(3, QHeaderView::Stretch);
+//    filesTable->horizontalHeader()->setSectionResizeMode(4, QHeaderView::Stretch);
+//    filesTable->horizontalHeader()->setSectionResizeMode(5, QHeaderView::ResizeToContents);
+//    filesTable->horizontalHeader()->setSectionResizeMode(6, QHeaderView::Stretch);
+//    filesTable->horizontalHeader()->setSectionResizeMode(7, QHeaderView::Stretch);
+//    filesTable->horizontalHeader()->setSectionResizeMode(8, QHeaderView::ResizeToContents);
+//    filesTable->horizontalHeader()->setSectionResizeMode(9, QHeaderView::Stretch);
+//    filesTable->horizontalHeader()->setSectionResizeMode(10, QHeaderView::Stretch);
+//    filesTable->horizontalHeader()->setSectionResizeMode(11, QHeaderView::ResizeToContents);
+
+
     for (int i=1; i<12;i++){
         filesTable->horizontalHeader()->setSectionResizeMode(i, QHeaderView::ResizeToContents);
     }
@@ -700,9 +828,9 @@ void Window::createFilesTable()
 void Window::openFileOfItem(int row, int /* column */)
 {
     const QTableWidgetItem *item = filesTable->item(row, 0);
-    const QTableWidgetItem *item4 = filesTable->item(row, 4);
-    const QTableWidgetItem *item6 = filesTable->item(row, 6);
+    const QTableWidgetItem *item5 = filesTable->item(row, 5);
     const QTableWidgetItem *item8 = filesTable->item(row, 8);
+    const QTableWidgetItem *item11 = filesTable->item(row, 11);
 
     vyborFile = fileNameOfItem(item);
     vyborFilesList.clear();
@@ -712,9 +840,9 @@ void Window::openFileOfItem(int row, int /* column */)
     FileCheck2.clear();
     FileCheck3.clear();
 
-    FileCheck1.insert(vyborFile, item4->checkState() );
-    FileCheck2.insert(vyborFile, item6->checkState() );
-    FileCheck3.insert(vyborFile, item8->checkState() );
+    FileCheck1.insert(vyborFile, item5->checkState() );
+    FileCheck2.insert(vyborFile, item8->checkState() );
+    FileCheck3.insert(vyborFile, item11->checkState() );
 
     work();
     showMapFiles();
@@ -744,8 +872,8 @@ void Window::work_list()
         showMapFiles();
     } else {
         QMessageBox::information(this, tr("Выбор файла"),
-                                 tr("<h2>Внимание!</h2>"
-                                    "<p>Ни один файл не выбран."),
+                                 tr("<h2 align=\"center\">Внимание!</h2>"
+                                    "<p align=\"center\">Ни один файл не выбран."),
                                  QMessageBox::Ok, QMessageBox::NoButton);
     }
 }
@@ -761,9 +889,9 @@ void Window::contextMenu(const QPoint &pos)
 {
     const QTableWidgetItem *item = filesTable->itemAt(pos);
 
-    const QTableWidgetItem *item4 = filesTable->item(item->row(), 4);
-    const QTableWidgetItem *item6 = filesTable->item(item->row(), 6);
+    const QTableWidgetItem *item5 = filesTable->item(item->row(), 5);
     const QTableWidgetItem *item8 = filesTable->item(item->row(), 8);
+    const QTableWidgetItem *item11 = filesTable->item(item->row(), 11);
 
     if (!item)
         return;
@@ -784,9 +912,9 @@ void Window::contextMenu(const QPoint &pos)
         FileCheck1.clear();
         FileCheck2.clear();
         FileCheck3.clear();
-        FileCheck1.insert(vyborFile, item4->checkState() );
-        FileCheck2.insert(vyborFile, item6->checkState() );
-        FileCheck3.insert(vyborFile, item8->checkState() );
+        FileCheck1.insert(vyborFile, item5->checkState() );
+        FileCheck2.insert(vyborFile, item8->checkState() );
+        FileCheck3.insert(vyborFile, item11->checkState() );
 
         work();
         showMapFiles();

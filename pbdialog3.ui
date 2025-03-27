@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Вычисляем и изменяем уровень аудио</string>
+   <string>Изменяем аудио данные</string>
   </property>
   <property name="windowIcon">
    <iconset>
