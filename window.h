@@ -45,8 +45,7 @@ class Window : public QWidget
 public:
     Window(QWidget *parent = nullptr);
 
-    QStringList findFiles(const QStringList &files, const QString &text);
-    QProgressDialog *pD;
+//    QStringList findFiles(const QStringList &files, const QString &text);
 
 friend class Audio;
 
@@ -66,7 +65,6 @@ protected:
     QHash<QString, bool> FileCheck2;
     QHash<QString, bool> FileCheck3;
 
-    QString strMaxVolume;
     QList<QTableWidgetItem *> listItem;
 
 signals:

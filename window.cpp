@@ -19,7 +19,7 @@ static inline void openFile(const QString &fileName)
 Window::Window(QWidget *parent)
     : QWidget(parent)
 {
-    setWindowTitle(tr("Audio Volume Normal v.3.0"));
+    setWindowTitle(tr("Audio Volume Normal v.3.1"));
 
     const QIcon folderIcon = QIcon::fromTheme("folder-cyan");
 
@@ -215,7 +215,7 @@ void Window::work()
                         "/AVN_" + QFileInfo(inFile).fileName();
 
                 // Посылаем на форму имя создаваемого файла
-                emit send_file_avn_name( avnFile );
+                emit send_file_avn_name( QString("AVN_" + QFileInfo(inFile).fileName()) );
 
 
                 QFile testFile(avnFile);
@@ -504,7 +504,7 @@ void Window::work()
                     if (FileCheck1.value(inFile)) list_args<< "-map"<< "0:a:0"<<"-ac"<< "2"<<"-c:a"<< FileCodec.value(inFile);
                     if (FileCheck2.value(inFile)) list_args<< "-map"<< "0:a:1"<<"-ac"<< "2"<< "-c:a"<< FileCodec.value(inFile);
                     if (FileCheck3.value(inFile)) list_args<< "-map"<< "0:a:2"<<"-ac"<< "2"<< "-c:a"<< FileCodec.value(inFile);
-                    list_args <<"-map"<<"0:s"<<"-c:s"<< "copy" <<avnFile;
+                    list_args <<"-map"<<"0:s?"<<"-c:s"<< "copy" <<avnFile;
                     sb->showMessage(tr("Изменяем формат аудио в файле: ")+avnFile );
 
 //                    qDebug() << "Process arguments:";

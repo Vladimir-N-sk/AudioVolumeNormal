@@ -55,7 +55,7 @@ int main(int argc, char *argv[])
 
     QCoreApplication::setOrganizationName("Vladimir-N-sk");
     QCoreApplication::setApplicationName("Audio Volume Normal");
-    QCoreApplication::setApplicationVersion("3.0");
+    QCoreApplication::setApplicationVersion("3.1");
     QCoreApplication::setOrganizationDomain("alvladnik@gmail.com");
     Window AudioWin;
 
