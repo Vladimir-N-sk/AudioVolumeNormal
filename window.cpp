@@ -19,7 +19,7 @@ static inline void openFile(const QString &fileName)
 Window::Window(QWidget *parent)
     : QWidget(parent)
 {
-    setWindowTitle(tr("Audio Volume Normal v.3.1"));
+    setWindowTitle(tr("Audio Volume Normal v.3.1.1"));
 
     const QIcon folderIcon = QIcon::fromTheme("folder-cyan");
 
@@ -299,7 +299,7 @@ void Window::work()
 
                     QStringList list_args;
                     list_args<< "-y" << "-hide_banner"<< "-i" << inFile
-                             <<"-map"<< "0:v"<< "-c:v"<< "copy";
+                             <<"-map"<< "0:v:0"<< "-c:v"<< "copy";
 
                     if ( max > 1) {
                         if (FileCheck1.value(inFile)) list_args<< "-map"<< "0:a:0"<< "-c:a"<< FileCodec.value(inFile);
@@ -385,7 +385,7 @@ void Window::work()
                     QStringList list_args;
 
                     list_args<< "-y" << "-hide_banner"<< "-i" << inFile
-                             <<"-map"<< "0:v"<< "-c:v"<< "copy";
+                             <<"-map"<< "0:v:0"<< "-c:v"<< "copy";
 
                     if ( max > 1) {
                         if (FileCheck1.value(inFile)) list_args<< "-map"<< "0:a:0"<< "-c:a"<< FileCodec.value(inFile);
@@ -783,8 +783,6 @@ void Window::createFilesTable()
     filesTable->setSelectionBehavior(QAbstractItemView::SelectRows);
 
     QStringList labels;
-//    labels << tr("Файл") << tr("Размер")<< tr("Кодек")
-//           << tr("Аудио1")<< tr("Выбор")<< tr("Аудио2")<< tr("Выбор")<< tr("Аудио3")<< tr("Выбор");
 
     labels << tr("File") << tr(" Size ")<< tr(" Codec ")
            << tr(" Audio1 ")<< tr(" Lvl1 ")<< tr("v")
@@ -794,19 +792,6 @@ void Window::createFilesTable()
     filesTable->setHorizontalHeaderLabels(labels);
 
     filesTable->horizontalHeader()->setSectionResizeMode(0, QHeaderView::Stretch);
-
-//    filesTable->horizontalHeader()->setSectionResizeMode(1, QHeaderView::Stretch);
-//    filesTable->horizontalHeader()->setSectionResizeMode(2, QHeaderView::Stretch);
-//    filesTable->horizontalHeader()->setSectionResizeMode(3, QHeaderView::Stretch);
-//    filesTable->horizontalHeader()->setSectionResizeMode(4, QHeaderView::Stretch);
-//    filesTable->horizontalHeader()->setSectionResizeMode(5, QHeaderView::ResizeToContents);
-//    filesTable->horizontalHeader()->setSectionResizeMode(6, QHeaderView::Stretch);
-//    filesTable->horizontalHeader()->setSectionResizeMode(7, QHeaderView::Stretch);
-//    filesTable->horizontalHeader()->setSectionResizeMode(8, QHeaderView::ResizeToContents);
-//    filesTable->horizontalHeader()->setSectionResizeMode(9, QHeaderView::Stretch);
-//    filesTable->horizontalHeader()->setSectionResizeMode(10, QHeaderView::Stretch);
-//    filesTable->horizontalHeader()->setSectionResizeMode(11, QHeaderView::ResizeToContents);
-
 
     for (int i=1; i<12;i++){
         filesTable->horizontalHeader()->setSectionResizeMode(i, QHeaderView::ResizeToContents);

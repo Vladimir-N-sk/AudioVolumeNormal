@@ -219,7 +219,7 @@ void Audio::audio_level(QString fileName )
                         QCoreApplication::processEvents();
                     }
 
-                    qDebug()<< "-----Line from ffmpeg:" << line;
+//                    qDebug()<< "Line from ffmpeg:" << line;
 
                     if(numberStreamAudio == 0){
 
@@ -232,15 +232,15 @@ void Audio::audio_level(QString fileName )
 //                        qDebug() << "***Audio Channel:" << channel;
                         switch (z1) {
                         case 1:
-                            qDebug() << "*****Number Audio Channel:"<<z1 <<" format:" << channel;
+//                            qDebug() << "*****Number Audio Channel:"<<z1 <<" format:" << channel;
                             emit send_channel1(fileName, channel);
                             break;
                         case 2:
-                            qDebug() << "*****Number Audio Channel:"<<z1 <<" format:" << channel;
+//                            qDebug() << "*****Number Audio Channel:"<<z1 <<" format:" << channel;
                             emit send_channel2(fileName, channel);
                             break;
                         case 3:
-                            qDebug() << "*****Number Audio Channel:"<<z1 <<" format:" << channel;
+//                            qDebug() << "*****Number Audio Channel:"<<z1 <<" format:" << channel;
                             emit send_channel3(fileName, channel);
                             break;
                         default:
@@ -295,7 +295,6 @@ Audio::Audio(QObject *parent)
         stop=false;
 }
 
-//---------------------------------------------------------------------------------------
 Audio::~Audio()
 {
 }
