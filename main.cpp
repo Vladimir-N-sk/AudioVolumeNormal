@@ -4,6 +4,7 @@
 
 #include "window.h"
 
+QString avn_ver = "v.3.2";
 static QTextStream output_ts;
 
 void myMessageHandler(QtMsgType type, const QMessageLogContext &context, const QString& msg)
@@ -55,7 +56,7 @@ int main(int argc, char *argv[])
 
     QCoreApplication::setOrganizationName("Vladimir-N-sk");
     QCoreApplication::setApplicationName("Audio Volume Normal");
-    QCoreApplication::setApplicationVersion("3.1.1");
+    QCoreApplication::setApplicationVersion(avn_ver);
     QCoreApplication::setOrganizationDomain("alvladnik@gmail.com");
     Window AudioWin;
 

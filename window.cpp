@@ -19,7 +19,8 @@ static inline void openFile(const QString &fileName)
 Window::Window(QWidget *parent)
     : QWidget(parent)
 {
-    setWindowTitle(tr("Audio Volume Normal v.3.1.1"));
+    extern QString avn_ver;
+    setWindowTitle(tr("Audio Volume Normal ")+avn_ver );
 
     const QIcon folderIcon = QIcon::fromTheme("folder-cyan");
 
@@ -200,8 +201,8 @@ void Window::work()
                     break;
                 }
 
-//                // Посылаем на форму имя обрабатываемого файла
-//                emit send_file_name( QFileInfo(vyborFilesList[i]).fileName() );
+                // Посылаем на форму имя обрабатываемого файла
+                emit send_file_name( QFileInfo(vyborFilesList[i]).fileName() );
 
                 // Посылаем на форму %% обработанных файлов
                 emit send_file_percent(i*100/vyborFilesList.size());
@@ -256,24 +257,19 @@ void Window::work()
 
                     dDb1=dDb2=dDb3=1.0;
                     max=0.0;
-                    dDb1=FileVolume1.value(inFile).trimmed().toDouble(&ok);
-                    if (!ok) {
-                        qDebug()<< "Audio 1 value Conversion double ERROR! Value:" << FileVolume1.value(inFile);
-                    } else {
+                    if ( FileVolume1.value(inFile) != "-.-" ) {
+                        dDb1=FileVolume1.value(inFile).trimmed().toDouble(&ok);
+                        if (!ok) qDebug()<< "Audio1 value Conversion double ERROR! Value:" << FileVolume1.value(inFile);
                         FileCheck1.insert(inFile, true );
                     }
-
-                    dDb2=FileVolume2.value(inFile).trimmed().toDouble(&ok);
-                    if (!ok) {
-                        qDebug()<< "Audio 2 value Conversion double ERROR! Value:" << FileVolume2.value(inFile);
-                    } else {
+                    if ( FileVolume2.value(inFile) != "-.-" ){
+                        dDb2=FileVolume2.value(inFile).trimmed().toDouble(&ok);
+                        if (!ok) qDebug()<< "Audio2 value Conversion double ERROR! Value:" << FileVolume2.value(inFile);
                         FileCheck2.insert(inFile, true );
                     }
-
-                    dDb3=FileVolume3.value(inFile).trimmed().toDouble(&ok);
-                    if (!ok) {
-                        qDebug()<< "Audio 3 value Conversion double ERROR! Value:" << FileVolume3.value(inFile);
-                    } else {
+                    if ( FileVolume3.value(inFile) != "-.-" ) {
+                        dDb3=FileVolume3.value(inFile).trimmed().toDouble(&ok);
+                        if (!ok) qDebug()<< "Audio3 value Conversion double ERROR! Value:" << FileVolume3.value(inFile);
                         FileCheck3.insert(inFile, true );
                     }
 
@@ -306,14 +302,12 @@ void Window::work()
                         if (FileCheck2.value(inFile)) list_args<< "-map"<< "0:a:1"<< "-c:a"<< FileCodec.value(inFile);
                         if (FileCheck3.value(inFile)) list_args<< "-map"<< "0:a:2"<< "-c:a"<< FileCodec.value(inFile);
                         list_args<<"-af" << strDb;
-                        sb->showMessage(tr("Изменяем уровень аудио в файле: ")+avnFile );
+                        sb->showMessage(tr("Изменяем уровень аудио в файле: ")+QString("AVN_" + QFileInfo(inFile).fileName()) );
                     } else {
                         sb->showMessage(tr("Уровень аудио в файле ")
-//                                        +QDir::toNativeSeparators(currentDir.relativeFilePath(avnFile))
-                                        +avnFile
+                                        +QString("AVN_" + QFileInfo(inFile).fileName())
                                         +tr(" не будет изменён.") );
                         qInfo() << tr("Уровень аудио в файле ")
-//                                <<QDir::toNativeSeparators(currentDir.relativeFilePath(avnFile))
                                 <<avnFile
                                << tr(" не будет изменён.");
                         list_args<< "-map"<< "0:a" <<"-c:a"<< "copy";
