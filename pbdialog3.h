@@ -2,6 +2,9 @@
 #define PBDIALOG3_H
 
 #include <QDialog>
+#include <QDir>
+#include <QIcon>
+#include <QApplication>
 
 namespace Ui {
 class pbDialog3;

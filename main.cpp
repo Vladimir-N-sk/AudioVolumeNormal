@@ -4,7 +4,7 @@
 
 #include "window.h"
 
-QString avn_ver = "v.3.2";
+QString avn_ver = "v.3.3";
 static QTextStream output_ts;
 
 void myMessageHandler(QtMsgType type, const QMessageLogContext &context, const QString& msg)
@@ -21,7 +21,7 @@ void myMessageHandler(QtMsgType type, const QMessageLogContext &context, const Q
         output_ts << QString("Info: %1 %2 (%3)").arg(formattedTime,msg, context.file) << Qt::endl;
         break;
     case QtWarningMsg:
-        output_ts << QString("Warning: %1 %2 (%3)").arg(formattedTime,msg, context.file) << Qt::endl;
+//        output_ts << QString("Warning: %1 %2 (%3)").arg(formattedTime,msg, context.file) << Qt::endl;
         break;
     case QtCriticalMsg:
         output_ts << QString("Critical: %1 %2 (%3)").arg(formattedTime,msg, context.file) << Qt::endl;
@@ -39,7 +39,8 @@ int main(int argc, char *argv[])
 
     QFont f = app.font();
 
-    QString logfilePath = QCoreApplication::applicationDirPath()+"/AVN.log";
+//    QString logfilePath = QCoreApplication::applicationDirPath()+"/AVN.log";
+    QString logfilePath = QDir::toNativeSeparators( QDir::homePath() +"/AVN.log");
     qInfo() << "See log file " + logfilePath;
     QFile outFile(logfilePath);
     outFile.open(QIODevice::WriteOnly | QIODevice::Truncate);
@@ -60,11 +61,9 @@ int main(int argc, char *argv[])
     QCoreApplication::setOrganizationDomain("alvladnik@gmail.com");
     Window AudioWin;
 
-//    AudioWin.setWindowIcon(QIcon("avn.svg"));
-    AudioWin.setWindowIcon(QIcon(  QString(QCoreApplication::applicationDirPath()+"/lib/avn.svg") ));
+    AudioWin.setWindowIcon(QIcon(QDir::toNativeSeparators( QString( QCoreApplication::applicationDirPath()+"/avn.svg") ) ));
 
      AudioWin.setMinimumSize(1280, 720);
-//     AudioWin.setMinimumSize(640,480);
 
     AudioWin.show();
     return app.exec();

@@ -12,10 +12,10 @@ void Audio::set_audio_level(QStringList process_args )
 
     emit set_pS(0);
 
-    QString dirFFmpeg = QCoreApplication::applicationDirPath()+"/lib";
+    QString fileFFmpeg = QDir::toNativeSeparators( (QCoreApplication::applicationDirPath()+"/libffmpeg") );
 
-    if ( !QFile(dirFFmpeg+"/libffmpeg").exists() ) {
-        qDebug() << "Not found file lib/libffmpeg" ;
+    if ( !QFile(fileFFmpeg).exists() ) {
+        qDebug() << "Not found file libffmpeg" ;
         exit(1);
     }
 
@@ -23,18 +23,14 @@ void Audio::set_audio_level(QStringList process_args )
     process->setProcessChannelMode(QProcess::MergedChannels);
     connect(process, &QProcess::errorOccurred, this, &Audio::log_prog );
 
-    QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
-    env.insert("LD_LIBRARY_PATH", dirFFmpeg); // Add an environment variable
-    process->setProcessEnvironment(env);
-
-    process->start( (dirFFmpeg+"/libffmpeg"), process_args);
+    process->start( (fileFFmpeg), process_args);
 
     if( !process->waitForStarted(1000) ) {
-        qDebug() <<"ERROR START SET_AUDIO_LEVEL args: "<<(dirFFmpeg+"/libffmpeg");
+        qDebug() <<"ERROR START SET_AUDIO_LEVEL args: "<<(fileFFmpeg);
         qDebug() << process_args;
         return;
     } else {
-        qInfo() <<"START SET_AUDIO_LEVEL args: "<<(dirFFmpeg+"/libffmpeg");
+        qInfo() <<"START SET_AUDIO_LEVEL args: "<<(fileFFmpeg);
         qInfo() << process_args;
     }
 
@@ -88,28 +84,25 @@ void Audio::audio_level(QString fileName )
     int mFT[] {0,0,0};
     stop = false;
 
-    QString dirFFmpeg = QCoreApplication::applicationDirPath()+"/lib";
+    QString fileFFmpeg = QDir::toNativeSeparators( (QCoreApplication::applicationDirPath()+"/libffmpeg") );
 
-    if ( !QFile(dirFFmpeg+"/libffmpeg").exists() ) {
-        qDebug() << "Not found file lib/libffmpeg" ;
+    if ( !QFile(fileFFmpeg).exists() ) {
+        qDebug() << "Not found file libffmpeg" ;
         exit(1);
     }
+
 
     QProcess *process = new QProcess(parent());
     process->setProcessChannelMode(QProcess::MergedChannels);
 
     connect(process, &QProcess::errorOccurred, this, &Audio::log_prog );
 
-    QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
-    env.insert("LD_LIBRARY_PATH", dirFFmpeg); // Add an environment variable
-    process->setProcessEnvironment(env);
-
     //Определяем кол-во аудио потоков
-    process->start( (dirFFmpeg+"/libffmpeg"), QStringList()
+    process->start( (fileFFmpeg), QStringList()
                     << "-hide_banner" << "-i" << fileName);
 
     if( !process->waitForStarted(1000) ) {
-        qDebug() <<"ERROR START AUDIO_LEVEL args: "<<(dirFFmpeg+"/libffmpeg")
+        qDebug() <<"ERROR START AUDIO_LEVEL args: "<<(fileFFmpeg)
                 << " -hide_banner " << " -i " << fileName;
         return;
     }
@@ -141,10 +134,10 @@ void Audio::audio_level(QString fileName )
 
         list_args<<"-af"<<filter_vol_detect<<"-vn"<< "-sn"<< "-dn"<<"-f"<< "null"<<"/dev/null";
 
-        process->start( (dirFFmpeg+"/libffmpeg"), list_args);
+        process->start( (fileFFmpeg), list_args);
 
         if( !process->waitForStarted(1000) ) {
-            qDebug() <<"ERROR START AUDIO_LEVEL args: "<<(dirFFmpeg+"/libffmpeg")
+            qDebug() <<"ERROR START AUDIO_LEVEL args: "<<(fileFFmpeg)
                     << " -hide_banner " << " -i " << fileName
                     << "-map" << ann
                     <<" -af " << filter_vol_detect
@@ -152,7 +145,7 @@ void Audio::audio_level(QString fileName )
             return;
         }
 
-        qDebug() <<"START AUDIO_LEVEL args: "<<(dirFFmpeg+"/libffmpeg")
+        qDebug() <<"START AUDIO_LEVEL args: "<<(fileFFmpeg)
                 << " -hide_banner " << " -i " << fileName
                 << "-map" << ann
                 <<" -af " << filter_vol_detect

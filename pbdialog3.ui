@@ -15,7 +15,7 @@
   </property>
   <property name="windowIcon">
    <iconset>
-    <normaloff>avn/lib/avn.svg</normaloff>avn/lib/avn.svg</iconset>
+    <normaloff>avn.svg</normaloff>avn.svg</iconset>
   </property>
   <property name="statusTip">
    <string>Выполняется</string>
