@@ -39,8 +39,15 @@ int main(int argc, char *argv[])
 
     QFont f = app.font();
 
-//    QString logfilePath = QCoreApplication::applicationDirPath()+"/AVN.log";
+#ifdef Q_OS_LINUX
     QString logfilePath = QDir::toNativeSeparators( QDir::homePath() +"/AVN.log");
+#elif defined(Q_OS_WIN)
+//     QString logfilePath = QCoreApplication::applicationDirPath()+"/AVN.log";
+    QString logfilePath = QDir::toNativeSeparators( QCoreApplication::applicationDirPath()+"/AVN.log");
+#else
+  qDebug() << "We don't support that version OS";
+#endif
+
     qInfo() << "See log file " + logfilePath;
     QFile outFile(logfilePath);
     outFile.open(QIODevice::WriteOnly | QIODevice::Truncate);
