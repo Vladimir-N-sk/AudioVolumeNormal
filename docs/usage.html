@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Моя программа - Как использовать</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="bg-gray-100 font-roboto">
+    <header class="bg-white shadow">
+        <div class="container mx-auto px-4 py-6 flex justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <img src="avn.svg" alt="Моя программа" class="h-10">
+                <h1 class="text-2xl font-bold text-gray-800">Моя программа</h1>
+            </div>
+            <nav>
+                <ul class="flex space-x-6">
+                    <li><a href="index.html" class="nav-link">О программе</a></li>
+                    <li><a href="download.html" class="nav-link active">Скачать</a></li>
+                    <li><a href="usage.html" class="nav-link">Как использовать</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+    <main class="container mx-auto px-4 py-12">
+        <section>
+            <h2 class="text-3xl font-bold text-gray-800 mb-4 text-center">Как использовать</h2>
+            <div class="max-w-2xl mx-auto">
+                <h3 class="text-xl font-semibold text-gray-800 mb-2">Установка</h3>
+                <ul class="list-disc list-inside text-gray-600 mb-6">
+                    <li>Скачайте файл программы для вашей платформы на странице <a href="download.html" class="text-blue-600 hover:underline">Скачать</a>.</li>
+                    <li><strong>Для Windows</strong>: Запустите установочный файл (.exe) и следуйте инструкциям установщика.</li>
+                    <li><strong>Для Linux</strong>: Сделайте файл .AppImage исполняемым (<code class="bg-gray-200 px-1 rounded">chmod +x linux-installer.AppImage</code>) и запустите его.</li>
+                </ul>
+                <h3 class="text-xl font-semibold text-gray-800 mb-2">Начало работы</h3>
+                <ul class="list-disc list-inside text-gray-600 mb-6">
+                    <li>Запустите приложение.</li>
+                    <li>Настройте [укажите основные параметры, например, "учётную запись" или "конфигурацию"].</li>
+                    <li>Начните использовать [укажите основное действие, например, "редактирование файлов" или "анализ данных"].</li>
+                </ul>
+                <p class="text-gray-600">
+                    Дополнительные инструкции и документацию можно найти в файле README.md в
+                    <a href="https://github.com/ВАШ_ЛОГИН/ВАШ_РЕПОЗИТОРИЙ" class="text-blue-600 hover:underline">репозитории</a>.
+                </p>
+            </div>
+        </section>
+    </main>
+    <footer class="bg-white py-6">
+        <div class="container mx-auto px-4 text-center">
+            <p class="text-gray-600">© 2025 ВАШ_ЛОГИН. Все права защищены.</p>
+        </div>
+    </footer>
+</body>
+</html>
