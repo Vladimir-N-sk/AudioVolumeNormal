@@ -1,4 +1,3 @@
-
 #include <QApplication>
 #include <QtPlugin>
 
@@ -31,6 +30,7 @@ void myMessageHandler(QtMsgType type, const QMessageLogContext &context, const Q
         abort();
     }
 }
+
 
 int main(int argc, char *argv[])
 {
