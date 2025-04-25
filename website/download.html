@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Моя программа - Скачать</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="bg-gray-100 font-roboto">
+    <header class="bg-white shadow">
+        <div class="container mx-auto px-4 py-6 flex justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <img src="avn.svg" alt="Моя программа" class="h-10">
+                <h1 class="text-2xl font-bold text-gray-800">Моя программа</h1>
+            </div>
+            <nav>
+                <ul class="flex space-x-6">
+                    <li><a href="index.html" class="nav-link">О программе</a></li>
+                    <li><a href="download.html" class="nav-link active">Скачать</a></li>
+                    <li><a href="usage.html" class="nav-link">Как использовать</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+    <main class="container mx-auto px-4 py-12">
+        <section class="text-center">
+            <h2 class="text-3xl font-bold text-gray-800 mb-4">Скачать</h2>
+            <p class="text-lg text-gray-600 max-w-2xl mx-auto mb-8">
+                Выберите версию программы для вашей платформы:
+            </p>
+            <div class="flex justify-center space-x-4">
+                <a href="https://github.com/ВАШ_ЛОГИН/ВАШ_РЕПОЗИТОРИЙ/releases/latest/download/windows-installer.exe"
+                   class="btn btn-windows">Скачать для Windows</a>
+                <a href="https://github.com/ВАШ_ЛОГИН/ВАШ_РЕПОЗИТОРИЙ/releases/latest/download/linux-installer.AppImage"
+                   class="btn btn-linux">Скачать для Linux</a>
+            </div>
+            <p class="text-lg text-gray-600 mt-8">
+                Исходный код доступен в нашем репозитории:
+            </p>
+            <a href="https://github.com/ВАШ_ЛОГИН/ВАШ_РЕПОЗИТОРИЙ" class="btn btn-repo">Перейти к репозиторию</a>
+        </section>
+    </main>
+    <footer class="bg-white py-6">
+        <div class="container mx-auto px-4 text-center">
+            <p class="text-gray-600">© 2025 ВАШ_ЛОГИН. Все права защищены.</p>
+        </div>
+    </footer>
+</body>
+</html>
