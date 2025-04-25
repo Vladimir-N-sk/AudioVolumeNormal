@@ -87,6 +87,8 @@ void recv_channel3(QString, QString);
 void recv_stop();
 
 private slots:
+    void codec_activ(bool checked);
+
     void browse();
     void find();
     void work();
@@ -105,6 +107,7 @@ private:
     QStringList findFilesList;
     QStringList vyborFilesList;
     QString vyborFile, sb1;
+    QString codec_aac="aac", codec_ac3="ac3", codec="copy";
     QStatusBar *sb;
 
     void showMapFiles();
@@ -119,10 +122,15 @@ private:
     QPushButton *workButton;
     QTableWidget *filesTable;
 
-    QGroupBox  *gb;      // Рамка с надписью вокруг группы элементов.
+    QGroupBox  *gb1;      // Рамка с надписью вокруг группы элементов.
+    QGroupBox  *gb2;      // Рамка с надписью вокруг группы элементов.
     QRadioButton *rb1;   // Три
-    QRadioButton *rb2;   // зависимых
-    QRadioButton *rb3;   // переключателя.
+    QRadioButton *rb_avn;   // зависимых
+    QRadioButton *rb_5t2;   // переключателя.
+    QRadioButton *rb_def;   // Три
+    QRadioButton *rb_ac3;   // зависимых
+    QRadioButton *rb_aac;   // переключателя.
+
     QDir currentDir;
 
     bool stop;
