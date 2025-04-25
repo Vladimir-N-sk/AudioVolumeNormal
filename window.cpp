@@ -81,31 +81,57 @@ Window::Window(QWidget *parent)
 
     connect(new QShortcut(QKeySequence::Quit, this), &QShortcut::activated,
         qApp, &QApplication::quit);
-/**/
-    gb = new QGroupBox(tr("Задание"));
-    gb->setAlignment(Qt::AlignHCenter);
 
-//    gb->setStyleSheet("color: black;" "background-color: #70D4E5;" );
-//    gb->setStyleSheet("color: black;" "background-color: #D6D2D0;" );
+
+    gb1 = new QGroupBox(tr("Задание"));
 
     //фон светло-серый
-        gb->setStyleSheet("color: black;" "background-color: #B6B6B6;" );
+//    gb1->setStyleSheet("color: black;" "background-color: #B6B6B6;" );
+    gb1->setAlignment(Qt::AlignHCenter);
+    gb1->setFlat(true);
 
-    rb1 = new QRadioButton(tr("Узнать данные аудио"), gb);
-    rb2 = new QRadioButton(tr("Изменить уровень аудио"), gb);
-    rb3 = new QRadioButton(tr("Изменить формат 5.1 в stereo"), gb);
+    rb1 = new QRadioButton(tr("Узнать данные аудио"), gb1);
+    rb_avn = new QRadioButton(tr("Изменить уровень аудио"), gb1);
+    rb_5t2 = new QRadioButton(tr("Изменить формат 5.1 в stereo"), gb1);
     rb1->setChecked(true);
     rb1->setDisabled(true);
-    rb2->setDisabled(true);
-    rb3->setDisabled(true);
+    rb_avn->setDisabled(true);
+    rb_5t2->setDisabled(true);
 
     // Менеджер размещения для радиокнопок:
+    QVBoxLayout *vbl1 = new QVBoxLayout();
+    vbl1->addWidget(rb1, 0);
+    vbl1->addWidget(rb_avn, 0);
+    vbl1->addWidget(rb_5t2, 0);
+    gb1->setLayout(vbl1);
+
+    gb2 = new QGroupBox(tr("Кодек"));
+    gb2->setAlignment(Qt::AlignHCenter);
+    gb2->setFlat(false);
+
+    rb_def = new QRadioButton(tr("Оставить без изменений"), gb2);
+    rb_ac3 = new QRadioButton(tr("Преобразовать в AC3"), gb2);
+    rb_aac = new QRadioButton(tr("Преобразовать в AAC"), gb2);
+    rb_def->setChecked(true);
+    rb_def->setDisabled(true);
+    rb_ac3->setDisabled(true);
+    rb_aac->setDisabled(true);
+
+    QVBoxLayout *vbl2 = new QVBoxLayout();
+    vbl2->addWidget(rb_def, 0);
+    vbl2->addWidget(rb_ac3, 0);
+    vbl2->addWidget(rb_aac, 0);
+
+    gb2->setLayout(vbl2);
+
     QHBoxLayout *hbl = new QHBoxLayout();
-    hbl->addWidget(rb1, 0);
-    hbl->addWidget(rb2, 0);
-    hbl->addWidget(rb3, 0);
-    gb->setLayout(hbl);
-    mainLayout->addWidget(gb, 4, 0, 1, 2);
+
+    hbl->addWidget(gb1);
+    hbl->addWidget(gb2);
+
+    mainLayout->addLayout(hbl, 4, 1);
+
+    connect(rb1, &QRadioButton::toggled, this, &Window::codec_activ );
 
     audio = new Audio();
     connect(audio,&Audio::send_max_vol1, this, &Window::recv_max_vol1 );
@@ -137,6 +163,7 @@ Window::Window(QWidget *parent)
     colorText = QApplication::palette().color(QPalette::Active, QPalette::Text).value();
 
     sb->showMessage(tr("Для начала работы нажмите <Найти файлы>"));
+    setLayout(mainLayout);
 }
 
 
@@ -188,7 +215,7 @@ void Window::work()
             }
             pbD->hide();
         }
-        if ( rb2->isChecked()){
+        if ( rb_avn->isChecked()){
             bool ok;
             double dDb1, dDb2, dDb3, max;
             stop = false;
@@ -297,10 +324,17 @@ void Window::work()
                     list_args<< "-y" << "-hide_banner"<< "-i" << inFile
                              <<"-map"<< "0:v:0"<< "-c:v"<< "copy";
 
+//                    if ( rb_def->isChecked()) codec="copy";
+                    if ( rb_ac3->isChecked()) codec=codec_ac3;
+                    if ( rb_aac->isChecked()) codec=codec_aac;
+
                     if ( max > 1) {
-                        if (FileCheck1.value(inFile)) list_args<< "-map"<< "0:a:0"<< "-c:a"<< FileCodec.value(inFile);
-                        if (FileCheck2.value(inFile)) list_args<< "-map"<< "0:a:1"<< "-c:a"<< FileCodec.value(inFile);
-                        if (FileCheck3.value(inFile)) list_args<< "-map"<< "0:a:2"<< "-c:a"<< FileCodec.value(inFile);
+//                        if (FileCheck1.value(inFile)) list_args<< "-map"<< "0:a:0"<< "-c:a"<< FileCodec.value(inFile);
+//                        if (FileCheck2.value(inFile)) list_args<< "-map"<< "0:a:1"<< "-c:a"<< FileCodec.value(inFile);
+//                        if (FileCheck3.value(inFile)) list_args<< "-map"<< "0:a:2"<< "-c:a"<< FileCodec.value(inFile);
+                        if (FileCheck1.value(inFile)) list_args<< "-map"<< "0:a:0"<< "-c:a"<< codec;
+                        if (FileCheck2.value(inFile)) list_args<< "-map"<< "0:a:1"<< "-c:a"<< codec;
+                        if (FileCheck3.value(inFile)) list_args<< "-map"<< "0:a:2"<< "-c:a"<< codec;
                         list_args<<"-af" << strDb;
                         sb->showMessage(tr("Изменяем уровень аудио в файле: ")+QString("AVN_" + QFileInfo(inFile).fileName()) );
                     } else {
@@ -310,9 +344,10 @@ void Window::work()
                         qInfo() << tr("Уровень аудио в файле ")
                                 <<avnFile
                                << tr(" не будет изменён.");
-                        list_args<< "-map"<< "0:a" <<"-c:a"<< "copy";
+                        list_args<< "-map"<< "0:a" <<"-c:a"<< codec;
                     }
-                    list_args<<"-c:s"<< "copy"<<"-strict"<< "experimental" <<avnFile;
+//                    list_args<<"-c:s"<< "copy"<<"-strict"<< "experimental" <<avnFile;
+                    list_args <<"-map"<<"0:s?"<<"-c:s"<< "copy" <<avnFile;
 
 //                    qDebug() << "Process arguments:";
 //                    for (const QString &str : list_args) {
@@ -377,14 +412,21 @@ void Window::work()
 //                    qDebug()<< "Filter: " << strDb;
 
                     QStringList list_args;
-
                     list_args<< "-y" << "-hide_banner"<< "-i" << inFile
                              <<"-map"<< "0:v:0"<< "-c:v"<< "copy";
 
+//                    if ( rb_def->isChecked()) codec="copy";
+                    if ( rb_ac3->isChecked()) codec=codec_ac3;
+                    if ( rb_aac->isChecked()) codec=codec_aac;
+
                     if ( max > 1) {
-                        if (FileCheck1.value(inFile)) list_args<< "-map"<< "0:a:0"<< "-c:a"<< FileCodec.value(inFile);
-                        if (FileCheck2.value(inFile)) list_args<< "-map"<< "0:a:1"<< "-c:a"<< FileCodec.value(inFile);
-                        if (FileCheck3.value(inFile)) list_args<< "-map"<< "0:a:2"<< "-c:a"<< FileCodec.value(inFile);
+//                        if (FileCheck1.value(inFile)) list_args<< "-map"<< "0:a:0"<< "-c:a"<< FileCodec.value(inFile);
+//                        if (FileCheck2.value(inFile)) list_args<< "-map"<< "0:a:1"<< "-c:a"<< FileCodec.value(inFile);
+//                        if (FileCheck3.value(inFile)) list_args<< "-map"<< "0:a:2"<< "-c:a"<< FileCodec.value(inFile);
+                        if (FileCheck1.value(inFile)) list_args<< "-map"<< "0:a:0"<< "-c:a"<< codec;
+                        if (FileCheck2.value(inFile)) list_args<< "-map"<< "0:a:1"<< "-c:a"<< codec;
+                        if (FileCheck3.value(inFile)) list_args<< "-map"<< "0:a:2"<< "-c:a"<< codec;
+
                         list_args<<"-af" << strDb;
                         sb->showMessage(tr("Изменяем уровень аудио в файле: ")+avnFile );
                     } else {
@@ -396,9 +438,10 @@ void Window::work()
 //                                <<QDir::toNativeSeparators(currentDir.relativeFilePath(avnFile))
                                <<avnFile
                                << tr(" не будет изменён.");
-                        list_args<< "-map"<< "0:a" <<"-c:a"<< "copy";
+                        list_args<< "-map"<< "0:a" <<"-c:a"<< codec;
                     }
-                    list_args<<"-c:s"<< "copy"<<"-strict"<< "experimental" <<avnFile;
+//                    list_args<<"-c:s"<< "copy"<<"-strict"<< "experimental" <<avnFile;
+                    list_args <<"-map"<<"0:s?"<<"-c:s"<< "copy" <<avnFile;
 
                     audio->set_audio_level( list_args );
                 }
@@ -407,9 +450,9 @@ void Window::work()
         }
 
 
-/****** rb3   ****************************************************************************/
+/****** rb_5t2   ****************************************************************************/
 
-        if ( rb3->isChecked()){
+        if ( rb_5t2->isChecked()){
 //            bool ok;
             stop = false;
 
@@ -494,10 +537,16 @@ void Window::work()
                     list_args<< "-y" << "-hide_banner"<< "-i" << inFile
                              <<"-map"<< "0:v:0"<< "-c:v"<< "copy";
 
+                    if ( rb_ac3->isChecked()) codec=codec_ac3;
+                    if ( rb_aac->isChecked()) codec=codec_aac;
 
-                    if (FileCheck1.value(inFile)) list_args<< "-map"<< "0:a:0"<<"-ac"<< "2"<<"-c:a"<< FileCodec.value(inFile);
-                    if (FileCheck2.value(inFile)) list_args<< "-map"<< "0:a:1"<<"-ac"<< "2"<< "-c:a"<< FileCodec.value(inFile);
-                    if (FileCheck3.value(inFile)) list_args<< "-map"<< "0:a:2"<<"-ac"<< "2"<< "-c:a"<< FileCodec.value(inFile);
+//                    if (FileCheck1.value(inFile)) list_args<< "-map"<< "0:a:0"<<"-ac"<< "2"<<"-c:a"<< FileCodec.value(inFile);
+//                    if (FileCheck2.value(inFile)) list_args<< "-map"<< "0:a:1"<<"-ac"<< "2"<< "-c:a"<< FileCodec.value(inFile);
+//                    if (FileCheck3.value(inFile)) list_args<< "-map"<< "0:a:2"<<"-ac"<< "2"<< "-c:a"<< FileCodec.value(inFile);
+                    if (FileCheck1.value(inFile)) list_args<< "-map"<< "0:a:0"<<"-ac"<< "2"<<"-c:a"<< codec;
+                    if (FileCheck2.value(inFile)) list_args<< "-map"<< "0:a:1"<<"-ac"<< "2"<< "-c:a"<< codec;
+                    if (FileCheck3.value(inFile)) list_args<< "-map"<< "0:a:2"<<"-ac"<< "2"<< "-c:a"<< codec;
+
                     list_args <<"-map"<<"0:s?"<<"-c:s"<< "copy" <<avnFile;
                     sb->showMessage(tr("Изменяем формат аудио в файле: ")+avnFile );
 
@@ -510,7 +559,7 @@ void Window::work()
                 } // end else
             }
             pbD3->hide();
-        }  // end rb3-checked
+        }  // end rb_5t2-checked
 
 
 
@@ -544,8 +593,8 @@ void Window::find()
 
     if (!findFilesList.isEmpty()) {
         rb1->setDisabled(false);
-        rb2->setDisabled(false);
-        rb3->setDisabled(false);
+        rb_avn->setDisabled(false);
+        rb_5t2->setDisabled(false);
         createMapFiles(findFilesList);
         showMapFiles();
         workButton->setVisible(true);
@@ -562,12 +611,12 @@ void Window::find()
             fff = "Найдено " + (QString::number(findFilesList.size())) + " файлов.";
             break;
         }
-        sb->showMessage(fff + QString(" Выбираем файлы, <Задание> и <Начать>"));
+        sb->showMessage(fff + QString(" Выбираем файлы, <Задание>, <Кодек> и <Начать>"));
     } else {
         workButton->hide();
         rb1->setDisabled(true);
-        rb2->setDisabled(true);
-        rb3->setDisabled(true);
+        rb_avn->setDisabled(true);
+        rb_5t2->setDisabled(true);
         findFilesList.clear();
         vyborFile.clear();
         QMessageBox::information(this, tr("Поиск фалов"),
@@ -963,7 +1012,18 @@ void Window::recv_channel3(QString fName, QString strChannel){
     FileChannel3.insert(fName, strChannel);
 }
 
-
 void Window::recv_stop(){
     stop = true;
+}
+
+void Window::codec_activ(bool checked){
+    if (checked) {
+        rb_def->setDisabled(true);
+        rb_ac3->setDisabled(true);
+        rb_aac->setDisabled(true);
+    } else {
+        rb_def->setDisabled(false);
+        rb_ac3->setDisabled(false);
+        rb_aac->setDisabled(false);
+    }
 }
