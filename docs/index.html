@@ -37,14 +37,13 @@
         }
         return gk_fileData[filename] || "";
         }
-        </script>
-
-<!DOCTYPE html>
+        </script><!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Моя программа - О программе</title>
+    <title>AudioVolumeNormal - О программе</title>
+    <link rel="icon" href="avn.svg" type="mage/svg+xml">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
@@ -53,8 +52,8 @@
     <header class="bg-white shadow">
         <div class="container mx-auto px-4 py-6 flex justify-between items-center">
             <div class="flex items-center space-x-3">
-                <img src="avn.svg" alt="Моя программа" class="h-10">
-                <h1 class="text-2xl font-bold text-gray-800">Моя программа</h1>
+                <img src="avn.svg" alt="AudioVolumeNormal" class="h-10">
+                <h1 class="text-2xl font-bold text-gray-800">AudioVolumeNormal</h1>
             </div>
             <nav>
                 <ul class="flex space-x-6">
@@ -69,17 +68,22 @@
         <section class="text-center">
             <h2 class="text-3xl font-bold text-gray-800 mb-4">О программе</h2>
             <p class="text-lg text-gray-600 max-w-2xl mx-auto mb-6">
-                Моя программа — это кроссплатформенное приложение для [укажите назначение], работающее на Windows и Linux.
-                Оно помогает [перечислите ключевые функции, например, "управлять данными" или "обрабатывать файлы"] с простым и интуитивным интерфейсом.
+                AudioVolumeNormal — это программа для увеличения громкости аудио сигнала в медиа файлах. Программа разработана как кроссплатформенная, поддерживаемые ОС Windows и Linux, для версий 64 бит.
+                Опробована на Windows 7, 10, 11. Linux Ubuntu 18.04.
             </p>
-            <p class="text-lg text-gray-600 max-w-2xl mx-auto">
-                Программа разработана для [укажите целевую аудиторию, например, "разработчиков" или "обычных пользователей"], чтобы упростить [укажите задачу].
-            </p>
+            <h3 class="text-xl font-semibold text-gray-800 mb-4">Возможности программы</h3>
+            <ul class="list-disc list-inside text-lg text-gray-600 max-w-2xl mx-auto text-left">
+                    <li>Поддержка популярных форматов: MP4, AVI, MKV, TS.</li>
+                    <li>Пакетная обработка нескольких файлов.</li>
+                    <li>Увеличить уровень аудио сигнала до "нормы" (0dB).</li>
+                    <li>Сконвертировать аудио поток (дорожку) из формата 5.1 (6.1, 7.1 ...) в stereo.</li>
+                    <li>Изменить аудио кодек на AAC или AC3.</li>
+            </ul>
         </section>
     </main>
     <footer class="bg-white py-6">
         <div class="container mx-auto px-4 text-center">
-            <p class="text-gray-600">© 2025 ВАШ_ЛОГИН. Все права защищены.</p>
+            <p class="text-gray-600">© <span title="vladimir-n-sk-2017@yandex.ru">2025 Vladimir-N-sk</span></p>
         </div>
     </footer>
 </body>
