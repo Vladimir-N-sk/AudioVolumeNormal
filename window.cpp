@@ -453,7 +453,6 @@ void Window::work()
 /****** rb_5t2   ****************************************************************************/
 
         if ( rb_5t2->isChecked()){
-//            bool ok;
             stop = false;
 
             pbD3->show();
@@ -476,7 +475,6 @@ void Window::work()
                         "/5t2_" + QFileInfo(inFile).fileName();
 
                 // Посылаем на форму имя создаваемого файла
-//                emit send_file_avn_name( avnFile );
                 emit send_file_avn_name( QString("5t2_" + QFileInfo(inFile).fileName()) );
 
                 QFile testFile(avnFile);
@@ -498,54 +496,65 @@ void Window::work()
                     }
                 }
 
-                if ( FileCodec.value(inFile) == "---" ) {
+/**************************************************************************************************/
+
+                if (( FileCodec.value(inFile) == "---" ) && !( rb_ac3->isChecked()) && !( rb_aac->isChecked()) ) {
 
                     sb->showMessage(tr("ВНИМАНИЕ! Для файла ")+
-                     QDir::toNativeSeparators(currentDir.relativeFilePath(inFile)) + tr(" нет исходных аудио данных.") );
+                     QDir::toNativeSeparators(currentDir.relativeFilePath(inFile)) + tr(" нет данных аудио кодека.") );
 
 
                     QMessageBox::information(this, tr("Изменение формата"),
                                              tr("<h2 align=\"center\">Внимание!</h2>\n"
                                                 "<p align=\"center\">Для изменения формата аудио необходимо"
-                                                "<p align=\"center\">сначала узнать данные аудио"
-                                                "<p align=\"center\">исходного файла."
+                                                " указать выходной формат аудио кодека."
+                                                "<p align=\"center\">Чтобы оставить кодек без изменения, надо сначала выбрать Задание"
+                                                " <b>Узнать данные аудио</b>"
+                                                "<p align=\"center\">Или непосредственно выбрать Кодек\n"
+                                                "<b>Преобразовать в AAC или AC3</b>"
                                                 ),
                                              QMessageBox::Ok, QMessageBox::NoButton);
 
                 } else {
-
+/********************/
                     qInfo()<< "File: " << inFile;
-                    if ( FileCheck1.value(inFile) ) qInfo() << "Audio 1 is checked.";
-                    if ( FileCheck2.value(inFile) ) qInfo() << "Audio 2 is checked.";
-                    if ( FileCheck3.value(inFile) ) qInfo() << "Audio 3 is checked.";
+//                    if ( FileCheck1.value(inFile) ) qInfo() << "Audio 1 is checked.";
+//                    if ( FileCheck2.value(inFile) ) qInfo() << "Audio 2 is checked.";
+//                    if ( FileCheck3.value(inFile) ) qInfo() << "Audio 3 is checked.";
 
                     qInfo()<< "Channel audio1: " << FileChannel1.value(inFile);
                     qInfo()<< "Channel audio2: " << FileChannel2.value(inFile);
                     qInfo()<< "Channel audio3: " << FileChannel3.value(inFile);
-                    qInfo()<< "Codec: " << FileCodec.value(inFile);
+                    qInfo()<< "File Codec: " << FileCodec.value(inFile);
 
-                    if ( !FileCheck1.value(inFile) && !FileCheck2.value(inFile) && !FileCheck3.value(inFile)) {
-                        qDebug() << tr("ВНИМАНИЕ! Для файла ")
-                                 <<QDir::toNativeSeparators(currentDir.relativeFilePath(inFile)) << tr(" не был выбран ни один аудио поток.");
-                        sb->showMessage(tr("ВНИМАНИЕ! Для файла ")+
-                                        QDir::toNativeSeparators(currentDir.relativeFilePath(inFile)) + tr(" не был выбран ни один аудио поток.") );
-                        continue;
-                    }
+//                    if ( !FileCheck1.value(inFile) && !FileCheck2.value(inFile) && !FileCheck3.value(inFile)) {
+//                        qDebug() << tr("ВНИМАНИЕ! Для файла ")
+//                                 <<QDir::toNativeSeparators(currentDir.relativeFilePath(inFile)) << tr(" не был выбран ни один аудио поток.");
+//                        sb->showMessage(tr("ВНИМАНИЕ! Для файла ")+
+//                                        QDir::toNativeSeparators(currentDir.relativeFilePath(inFile)) + tr(" не был выбран ни один аудио поток.") );
+//                        continue;
+//                    }
 
                     QStringList list_args;
 
                     list_args<< "-y" << "-hide_banner"<< "-i" << inFile
                              <<"-map"<< "0:v:0"<< "-c:v"<< "copy";
 
+                    codec=FileCodec.value(inFile);
                     if ( rb_ac3->isChecked()) codec=codec_ac3;
                     if ( rb_aac->isChecked()) codec=codec_aac;
+
+                    qInfo()<< "Checked Codec: " << codec;
 
 //                    if (FileCheck1.value(inFile)) list_args<< "-map"<< "0:a:0"<<"-ac"<< "2"<<"-c:a"<< FileCodec.value(inFile);
 //                    if (FileCheck2.value(inFile)) list_args<< "-map"<< "0:a:1"<<"-ac"<< "2"<< "-c:a"<< FileCodec.value(inFile);
 //                    if (FileCheck3.value(inFile)) list_args<< "-map"<< "0:a:2"<<"-ac"<< "2"<< "-c:a"<< FileCodec.value(inFile);
-                    if (FileCheck1.value(inFile)) list_args<< "-map"<< "0:a:0"<<"-ac"<< "2"<<"-c:a"<< codec;
-                    if (FileCheck2.value(inFile)) list_args<< "-map"<< "0:a:1"<<"-ac"<< "2"<< "-c:a"<< codec;
-                    if (FileCheck3.value(inFile)) list_args<< "-map"<< "0:a:2"<<"-ac"<< "2"<< "-c:a"<< codec;
+
+//                    if (FileCheck1.value(inFile)) list_args<< "-map"<< "0:a:0"<<"-ac"<< "2"<<"-c:a"<< codec;
+//                    if (FileCheck2.value(inFile)) list_args<< "-map"<< "0:a:1"<<"-ac"<< "2"<< "-c:a"<< codec;
+//                    if (FileCheck3.value(inFile)) list_args<< "-map"<< "0:a:2"<<"-ac"<< "2"<< "-c:a"<< codec;
+
+                    list_args<< "-map"<< "0:a"<<"-ac"<< "2"<< "-c:a"<< codec;
 
                     list_args <<"-map"<<"0:s?"<<"-c:s"<< "copy" <<avnFile;
                     sb->showMessage(tr("Изменяем формат аудио в файле: ")+avnFile );
@@ -620,7 +629,7 @@ void Window::find()
         findFilesList.clear();
         vyborFile.clear();
         QMessageBox::information(this, tr("Поиск фалов"),
-                                 tr("<h2>Упс!</h2>\n"
+                                 tr("<h2 align=\"center\">Упс!</h2>"
                                     "<p align=\"center\">В выбранной папке ни один медиафайл не найден."
                                     "<p align=\"center\">Попробуйте в другой папке."),
                                  QMessageBox::Ok, QMessageBox::NoButton);
@@ -1002,6 +1011,7 @@ void Window::recv_codec(QString fName, QString strCodec){
     FileCodec.insert(fName, strCodec);
 }
 
+/* FileChannel - stereo, 5.1*/
 void Window::recv_channel1(QString fName, QString strChannel){
     FileChannel1.insert(fName, strChannel);
 }

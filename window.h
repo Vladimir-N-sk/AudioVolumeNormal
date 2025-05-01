@@ -107,7 +107,7 @@ private:
     QStringList findFilesList;
     QStringList vyborFilesList;
     QString vyborFile, sb1;
-    QString codec_aac="aac", codec_ac3="ac3", codec="copy";
+    QString codec_aac="aac", codec_ac3="ac3", codec;
     QStatusBar *sb;
 
     void showMapFiles();
