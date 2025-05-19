@@ -42,7 +42,6 @@ int main(int argc, char *argv[])
 #ifdef Q_OS_LINUX
     QString logfilePath = QDir::toNativeSeparators( QDir::homePath() +"/AVN.log");
 #elif defined(Q_OS_WIN)
-//     QString logfilePath = QCoreApplication::applicationDirPath()+"/AVN.log";
     QString logfilePath = QDir::toNativeSeparators( QCoreApplication::applicationDirPath()+"/AVN.log");
 #else
   qDebug() << "We don't support that version OS";
@@ -54,6 +53,9 @@ int main(int argc, char *argv[])
     output_ts.setDevice(&outFile);
     qInstallMessageHandler(myMessageHandler);
 
+    qInfo() << "Program website: https://vladimir-n-sk.github.io/AudioVolumeNormal";
+    qInfo() << "Author's email: vladimir-nsk-2017@yandex.ru";
+    qInfo() << "";
     qInfo() << "Audio Volume Normal start";
     qInfo() << "SysInfo: "<< QSysInfo::prettyProductName() << " " << QSysInfo::currentCpuArchitecture();
     qInfo() << "Default font size:"<<f.pointSize();
@@ -65,7 +67,7 @@ int main(int argc, char *argv[])
     QCoreApplication::setOrganizationName("Vladimir-N-sk");
     QCoreApplication::setApplicationName("Audio Volume Normal");
     QCoreApplication::setApplicationVersion(avn_ver);
-    QCoreApplication::setOrganizationDomain("alvladnik@gmail.com");
+    QCoreApplication::setOrganizationDomain("vladimir-nsk-2017@yandex.ru");
     Window AudioWin;
 
     AudioWin.setWindowIcon(QIcon(QDir::toNativeSeparators( QString( QCoreApplication::applicationDirPath()+"/avn.svg") ) ));

@@ -3,7 +3,6 @@ TARGET = AudioVolumeNormal
 
 QT += widgets core gui svg
 
-#QTPLUGIN.platforms = qminimal qxcb linuxfb
 QTPLUGIN.platforms = qminimal qxcb
 
 HEADERS = window.h \
@@ -18,15 +17,12 @@ audio.cpp \
     pbdialog.cpp \
     pbdialog3.cpp
 
-#CONFIG += static
-
-#LIBS += -L/media/sdb2/Qt/QtStatic/lib   // задается в настройках QtCreator
-#LIBS += -L/media/sdb2/ffmpeg_new/lib    // задается в настройках QtCreator
-#LIBS += -lpostproc -lavformat  -lavcodec -lavutil -lavfilter -lswscale -lavdevice -lswresample -lx264 -lx265
-
 QMAKE_CXXFLAGS_WARN_ON += -Wno-unused -Wimplicit-fallthrough
 
 FORMS += \
     pbdialog.ui \
     pbdialog3.ui
+
+RESOURCES += \
+    icon.qrc
 
