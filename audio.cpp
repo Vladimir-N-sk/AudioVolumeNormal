@@ -16,9 +16,10 @@ void Audio::set_audio_level(QStringList process_args )
     QString dirFFmpeg = QCoreApplication::applicationDirPath();
 
     if ( !QFile(dirFFmpeg+"/libffmpeg").exists() ) {
-//        qDebug() << "Not found file lib/libffmpeg" ;
-        qDebug() << "Not found file /libffmpeg" ;
-        exit(1);
+        qCritical() << "Not found file /libffmpeg" ;
+        emit send_ExitStatus(QString(tr("Not found file /libffmpeg")));
+        return;
+//        exit(1);
     }
 
     QProcess *process = new QProcess(parent());
@@ -48,9 +49,11 @@ void Audio::set_audio_level(QStringList process_args )
             delete process;
             return;
         }
+        line="";
         while(process->canReadLine()){
 
-            QString line = QString(process->readLine() );
+//            QString line = QString(process->readLine() );
+            line = QString(process->readLine() );
 
             //            qDebug()<< "Line from ffmpeg:" << line;
 
@@ -75,6 +78,12 @@ void Audio::set_audio_level(QStringList process_args )
         }           //process->canReadLine
     }               // rocess->waitForReadyRead
 
+    if (process->exitCode() != 0) {
+        qCritical()<<"Status Finish SET_AUDIO_LEVEL exitCode():"<< process->exitCode() ;
+        qCritical()<< "Last message from libffmpeg:" << line;
+        emit send_ExitStatus(line);
+    }
+
     process->close();
     delete process;
     emit set_pS(100);
@@ -90,12 +99,13 @@ void Audio::audio_level(QString fileName )
     int mFT[] {0,0,0};
     stop = false;
 
-//    QString dirFFmpeg = QCoreApplication::applicationDirPath()+"/lib";
     QString dirFFmpeg = QCoreApplication::applicationDirPath();
 
     if ( !QFile(dirFFmpeg+"/libffmpeg").exists() ) {
-        qDebug() << "Not found file /libffmpeg" ;
-        exit(1);
+        qCritical() << "Not found file /libffmpeg" ;
+        emit send_ExitStatus(QString(tr("Not found file /libffmpeg")));
+        return;
+        //        exit(1);
     }
 
     QProcess *process = new QProcess(parent());
@@ -118,9 +128,11 @@ void Audio::audio_level(QString fileName )
     }
 
     emit set_pS(0);
+    line="";
     while (process->waitForReadyRead(-1)) {
         while(process->canReadLine()){
-            QString line = QString(process->readLine() );
+            //            QString line = QString(process->readLine() );
+            line = QString(process->readLine() );
             //            qDebug()<< "Line from ffmpeg:" << line;
             if ( line.contains("Audio:"))  streamAudio++;
 
@@ -173,7 +185,8 @@ void Audio::audio_level(QString fileName )
             }
             while(process->canReadLine()){
 
-                QString line = QString(process->readLine() );
+//                QString line = QString(process->readLine() );
+                line = QString(process->readLine() );
 
 //                qDebug()<< "Line from ffmpeg:" << line;
 
@@ -232,18 +245,14 @@ void Audio::audio_level(QString fileName )
 
                         z1=line.mid( (line.indexOf(QChar(':'),0))+1,1).toInt();
 
-//                        qDebug() << "***Audio Channel:" << channel;
                         switch (z1) {
                         case 1:
-//                            qDebug() << "*****Number Audio Channel:"<<z1 <<" format:" << channel;
                             emit send_channel1(fileName, channel);
                             break;
                         case 2:
-//                            qDebug() << "*****Number Audio Channel:"<<z1 <<" format:" << channel;
                             emit send_channel2(fileName, channel);
                             break;
                         case 3:
-//                            qDebug() << "*****Number Audio Channel:"<<z1 <<" format:" << channel;
                             emit send_channel3(fileName, channel);
                             break;
                         default:
@@ -257,6 +266,13 @@ void Audio::audio_level(QString fileName )
             }           //process->canReadLine
         }               // rocess->waitForReadyRead
     }//end for
+
+    if (process->exitCode() != 0) {
+        qCritical()<<"Status Finish AUDIO_LEVEL exitCode():"<< process->exitCode() ;
+        qCritical()<< "Last message from libffmpeg:" << line;
+        emit send_ExitStatus(line);
+    }
+
     emit set_pD(100);
     qInfo() << "End AUDIO_LEVEL";
     process->close();

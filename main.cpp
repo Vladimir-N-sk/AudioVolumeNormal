@@ -3,7 +3,7 @@
 
 #include "window.h"
 
-QString avn_ver = "v.4.1";
+QString avn_ver = "v.4.2";
 static QTextStream output_ts;
 
 void myMessageHandler(QtMsgType type, const QMessageLogContext &context, const QString& msg)

@@ -84,6 +84,8 @@ void recv_channel1(QString, QString);
 void recv_channel2(QString, QString);
 void recv_channel3(QString, QString);
 
+void recv_ExitStatus(QString);
+
 void recv_stop();
 
 private slots:

@@ -105,7 +105,7 @@ Window::Window(QWidget *parent)
     vbl1->addWidget(rb_5t2, 0);
     gb1->setLayout(vbl1);
 
-    gb2 = new QGroupBox(tr("Кодек"));
+    gb2 = new QGroupBox(tr("Аудио кодек"));
     gb2->setAlignment(Qt::AlignHCenter);
     gb2->setFlat(false);
 
@@ -141,6 +141,7 @@ Window::Window(QWidget *parent)
     connect(audio,&Audio::send_channel1, this, &Window::recv_channel1 );
     connect(audio,&Audio::send_channel2, this, &Window::recv_channel2 );
     connect(audio,&Audio::send_channel3, this, &Window::recv_channel3 );
+    connect(audio,&Audio::send_ExitStatus, this, &Window::recv_ExitStatus );
 
     pbD = new pbDialog();
     connect(audio,&Audio::set_pD, pbD, &pbDialog::pBarAudio_valueChanged );
@@ -324,14 +325,12 @@ void Window::work()
                     list_args<< "-y" << "-hide_banner"<< "-i" << inFile
                              <<"-map"<< "0:v:0"<< "-c:v"<< "copy";
 
-//                    if ( rb_def->isChecked()) codec="copy";
+                    codec=FileCodec.value(inFile);
                     if ( rb_ac3->isChecked()) codec=codec_ac3;
                     if ( rb_aac->isChecked()) codec=codec_aac;
 
+
                     if ( max > 1) {
-//                        if (FileCheck1.value(inFile)) list_args<< "-map"<< "0:a:0"<< "-c:a"<< FileCodec.value(inFile);
-//                        if (FileCheck2.value(inFile)) list_args<< "-map"<< "0:a:1"<< "-c:a"<< FileCodec.value(inFile);
-//                        if (FileCheck3.value(inFile)) list_args<< "-map"<< "0:a:2"<< "-c:a"<< FileCodec.value(inFile);
                         if (FileCheck1.value(inFile)) list_args<< "-map"<< "0:a:0"<< "-c:a"<< codec;
                         if (FileCheck2.value(inFile)) list_args<< "-map"<< "0:a:1"<< "-c:a"<< codec;
                         if (FileCheck3.value(inFile)) list_args<< "-map"<< "0:a:2"<< "-c:a"<< codec;
@@ -346,7 +345,6 @@ void Window::work()
                                << tr(" не будет изменён.");
                         list_args<< "-map"<< "0:a" <<"-c:a"<< codec;
                     }
-//                    list_args<<"-c:s"<< "copy"<<"-strict"<< "experimental" <<avnFile;
                     list_args <<"-map"<<"0:s?"<<"-c:s"<< "copy" <<avnFile;
 
 //                    qDebug() << "Process arguments:";
@@ -409,20 +407,17 @@ void Window::work()
                     max = -1 * max;
 
                     QString strDb="volume=" + QString::number(max)+"dB";
-//                    qDebug()<< "Filter: " << strDb;
 
                     QStringList list_args;
                     list_args<< "-y" << "-hide_banner"<< "-i" << inFile
                              <<"-map"<< "0:v:0"<< "-c:v"<< "copy";
 
-//                    if ( rb_def->isChecked()) codec="copy";
+                    codec=FileCodec.value(inFile);
                     if ( rb_ac3->isChecked()) codec=codec_ac3;
                     if ( rb_aac->isChecked()) codec=codec_aac;
 
+
                     if ( max > 1) {
-//                        if (FileCheck1.value(inFile)) list_args<< "-map"<< "0:a:0"<< "-c:a"<< FileCodec.value(inFile);
-//                        if (FileCheck2.value(inFile)) list_args<< "-map"<< "0:a:1"<< "-c:a"<< FileCodec.value(inFile);
-//                        if (FileCheck3.value(inFile)) list_args<< "-map"<< "0:a:2"<< "-c:a"<< FileCodec.value(inFile);
                         if (FileCheck1.value(inFile)) list_args<< "-map"<< "0:a:0"<< "-c:a"<< codec;
                         if (FileCheck2.value(inFile)) list_args<< "-map"<< "0:a:1"<< "-c:a"<< codec;
                         if (FileCheck3.value(inFile)) list_args<< "-map"<< "0:a:2"<< "-c:a"<< codec;
@@ -431,16 +426,13 @@ void Window::work()
                         sb->showMessage(tr("Изменяем уровень аудио в файле: ")+avnFile );
                     } else {
                         sb->showMessage(tr("Уровень аудио в файле ")
-//                                        +QDir::toNativeSeparators(currentDir.relativeFilePath(avnFile))
                                         +avnFile
                                         +tr(" не будет изменён.") );
                         qInfo() << tr("Уровень аудио в файле ")
-//                                <<QDir::toNativeSeparators(currentDir.relativeFilePath(avnFile))
                                <<avnFile
                                << tr(" не будет изменён.");
                         list_args<< "-map"<< "0:a" <<"-c:a"<< codec;
                     }
-//                    list_args<<"-c:s"<< "copy"<<"-strict"<< "experimental" <<avnFile;
                     list_args <<"-map"<<"0:s?"<<"-c:s"<< "copy" <<avnFile;
 
                     audio->set_audio_level( list_args );
@@ -518,22 +510,11 @@ void Window::work()
                 } else {
 /********************/
                     qInfo()<< "File: " << inFile;
-//                    if ( FileCheck1.value(inFile) ) qInfo() << "Audio 1 is checked.";
-//                    if ( FileCheck2.value(inFile) ) qInfo() << "Audio 2 is checked.";
-//                    if ( FileCheck3.value(inFile) ) qInfo() << "Audio 3 is checked.";
 
                     qInfo()<< "Channel audio1: " << FileChannel1.value(inFile);
                     qInfo()<< "Channel audio2: " << FileChannel2.value(inFile);
                     qInfo()<< "Channel audio3: " << FileChannel3.value(inFile);
                     qInfo()<< "File Codec: " << FileCodec.value(inFile);
-
-//                    if ( !FileCheck1.value(inFile) && !FileCheck2.value(inFile) && !FileCheck3.value(inFile)) {
-//                        qDebug() << tr("ВНИМАНИЕ! Для файла ")
-//                                 <<QDir::toNativeSeparators(currentDir.relativeFilePath(inFile)) << tr(" не был выбран ни один аудио поток.");
-//                        sb->showMessage(tr("ВНИМАНИЕ! Для файла ")+
-//                                        QDir::toNativeSeparators(currentDir.relativeFilePath(inFile)) + tr(" не был выбран ни один аудио поток.") );
-//                        continue;
-//                    }
 
                     QStringList list_args;
 
@@ -545,14 +526,6 @@ void Window::work()
                     if ( rb_aac->isChecked()) codec=codec_aac;
 
                     qInfo()<< "Checked Codec: " << codec;
-
-//                    if (FileCheck1.value(inFile)) list_args<< "-map"<< "0:a:0"<<"-ac"<< "2"<<"-c:a"<< FileCodec.value(inFile);
-//                    if (FileCheck2.value(inFile)) list_args<< "-map"<< "0:a:1"<<"-ac"<< "2"<< "-c:a"<< FileCodec.value(inFile);
-//                    if (FileCheck3.value(inFile)) list_args<< "-map"<< "0:a:2"<<"-ac"<< "2"<< "-c:a"<< FileCodec.value(inFile);
-
-//                    if (FileCheck1.value(inFile)) list_args<< "-map"<< "0:a:0"<<"-ac"<< "2"<<"-c:a"<< codec;
-//                    if (FileCheck2.value(inFile)) list_args<< "-map"<< "0:a:1"<<"-ac"<< "2"<< "-c:a"<< codec;
-//                    if (FileCheck3.value(inFile)) list_args<< "-map"<< "0:a:2"<<"-ac"<< "2"<< "-c:a"<< codec;
 
                     list_args<< "-map"<< "0:a"<<"-ac"<< "2"<< "-c:a"<< codec;
 
@@ -569,8 +542,6 @@ void Window::work()
             }
             pbD3->hide();
         }  // end rb_5t2-checked
-
-
 
     }  // vyborFilesList.isEmpty()
     //    }  // for
@@ -691,7 +662,6 @@ void Window::showMapFiles()
         codecItem->setTextAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
         codecItem->setFlags(codecItem->flags() ^ Qt::ItemIsEditable);
         if ( colorText < 100 ) {
-//            codecItem->setBackground(QColor(QColorConstants::Svg::lightsteelblue));
             codecItem->setBackground(QColor(QColorConstants::Svg::lavender));
         } else {
             codecItem->setBackground(QColor(QColorConstants::Svg::lightslategrey));
@@ -964,10 +934,6 @@ void Window::contextMenu(const QPoint &pos)
 
 void Window::browse()
 {
-//    QString directory =
-//        QDir::toNativeSeparators(QFileDialog::getExistingDirectory(this,
-//                                 tr("Выбрать папку"),
-//                                 QDir::currentPath() ));
 
     QString directory =
             QDir::toNativeSeparators(
@@ -1036,4 +1002,13 @@ void Window::codec_activ(bool checked){
         rb_ac3->setDisabled(false);
         rb_aac->setDisabled(false);
     }
+}
+
+void Window::recv_ExitStatus(QString lastMessage){
+    QString mess=tr("Что-то пошло не так!\nПроцесс завершился сообщением\n")
+            +lastMessage
+            +tr("\nДля подробностей смотрим лог-файл AVN.log.");
+    QMessageBox::critical(this, tr("Предупреждение"), mess,
+                          QMessageBox::Ok, QMessageBox::NoButton);
+
 }

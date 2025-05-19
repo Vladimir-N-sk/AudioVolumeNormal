@@ -50,11 +50,13 @@ signals:
     void send_channel1(QString,QString);
     void send_channel2(QString,QString);
     void send_channel3(QString,QString);
+    void send_ExitStatus(QString);
 
 protected:
     QProcess *process;
     QString filter_vol_detect = "volumedetect";
     QString filter_volume = "volume=";
+    QString line;
 
 private:
     bool stop;
